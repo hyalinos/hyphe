@@ -12,22 +12,20 @@ BaselineOfHyphe >> baseline: spec [
 	spec for: #common do: [
 			spec
 				baseline: 'TypeMe'
-				with: [ spec repository: 'github://lsafina/typeMe:main' ].
-
-			spec 
+					with: [ spec repository: 'github://lsafina/typeMe:main' ];
     			baseline: 'MethodProxies' 
-   	 			with: [ spec repository: 'github://pharo-contributions/MethodProxies/src' ].
-				
-			spec
-    			package: 'Mycelium' with: [
-      			spec repository: 'github://hyalinos/mycelium:main' ].
+   	 				with: [ spec repository: 'github://pharo-contributions/MethodProxies/src' ].
 			
 			spec
 				package: #Hyphe
-				with: [
-					spec requires: #( 'TypeMe' 'MethodProxies' 'Mycelium') ];
-				package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ].
+					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'Mycelium') ];
+				package: 'Hyphe-Tests' 
+					with: [ spec requires: #( 'Hyphe' ) ];
+				package: #Mycelium 
+					with: [ spec repository: 'github://hyalinos/mycelium:main' ].
+		
 			spec
 				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
-				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) ]
+				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) 
+	]
 ]
