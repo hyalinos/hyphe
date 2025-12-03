@@ -25,7 +25,7 @@ BaselineOfHyphe >> baseline: spec [
 					with: [ spec repository: 'github://hyalinos/mycelium:main' ].
 		
 			spec
-				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
-				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) 
+				group: 'Core' with: #( 'Hyphe' Hyphe-Tests );
+				group: 'default' with: #( 'Hyphe' Hyphe-Tests ) 
 	]
 ]
