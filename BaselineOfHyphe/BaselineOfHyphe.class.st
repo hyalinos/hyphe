@@ -20,7 +20,7 @@ BaselineOfHyphe >> baseline: spec [
 			
 			spec
 				package: #Hyphe
-					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'Mycelium' 'TypeInfoTools') ];
+					with: [ spec requires: #( 'TypeMe' 'MethodProxies' 'TypeInfoTools') ];
 				package: #'Hyphe-Tests' 
 					with: [ spec requires: #( 'Hyphe' ) ];
 				package: #Mycelium 
