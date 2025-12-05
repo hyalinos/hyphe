@@ -18,7 +18,7 @@ HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aCla
 	
 	"Get method information"
 	methodName := aCompiledMethod selector asString.
-	
+	Transcript showCr: aClass name.
 	"Lookup inference data from store"
 	store := HypheTypeInferenceStore current.
 	inferenceResult := store inferenceForClass: aClass selector: aCompiledMethod selector.
