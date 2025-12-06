@@ -28,6 +28,15 @@ BaselineOfHyphe >> baseline: spec [
 		
 			spec
 				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
-				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ) 
+				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ).
+				
+			spec postLoadDoIt: #postload
 	]
+]
+
+{ #category : 'baselines' }
+BaselineOfHyphe >> postload [
+
+"Called once the baseline finished loading"
+Transcript showCr: 'Hyphe baseline loaded'
 ]
