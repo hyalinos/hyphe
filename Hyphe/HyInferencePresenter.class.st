@@ -122,7 +122,7 @@ HyInferencePresenter >> initializePresenters [
 
 	packageList := self newList.
 	packageList
-		items: self getAllPackages;
+		items: (self getAllPackages sorted: [ :a :b | a name <= b name ]);
 		beMultipleSelection;
 		display: [ :pkg | pkg name ].
 

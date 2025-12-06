@@ -77,10 +77,16 @@ HyMainPresenter >> runInference [
 
 { #category : 'layout' }
 HyMainPresenter >> subscribePackages [
-	"Action for Subscribe packages button"
+
+	HyRepositorySubscriptionPresenter new open
+
+	
 ]
 
 { #category : 'layout' }
 HyMainPresenter >> viewResults [
-	"Action for View results button"
+	
+	HyBrowseResults new open.
+
+	
 ]
