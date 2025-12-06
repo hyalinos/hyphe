@@ -1,8 +1,9 @@
 Class {
 	#name : 'ManifestHyphe',
 	#superclass : 'PackageManifest',
-	#category : 'Hyphe',
-	#package : 'Hyphe'
+	#category : 'Hyphe-Manifest',
+	#package : 'Hyphe',
+	#tag : 'Manifest'
 }
 
 { #category : 'install/uninstall' }

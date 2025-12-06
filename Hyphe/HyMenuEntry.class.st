@@ -38,7 +38,7 @@ HyMenuEntry class >> hyalinosIcon [
 { #category : 'world menu' }
 HyMenuEntry class >> initialize [
 
-	self installKeymap.
+	"self installKeymap."
 	presenter := HyMainPresenter new
 ]
 
