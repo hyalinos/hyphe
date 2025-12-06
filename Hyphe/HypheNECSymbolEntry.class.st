@@ -33,6 +33,24 @@ HypheNECSymbolEntry class >> getOriginInfoString: aNode class: aClass selector: 
 ]
 
 { #category : 'as yet unclassified' }
+HypheNECSymbolEntry class >> getReceiverClassName: aNode [
+	| receiverClass |
+	^ [
+		receiverClass := aNode
+			ifNil: [ 'Unknown receiver' ]
+			ifNotNil: [
+				aNode isMessage
+					ifTrue: [
+						(aNode receiver propertyAt: #type ifAbsent: [ 'Unknown class' ]) asString
+					]
+					ifFalse: [ 'Not a message' ] ].
+		^ receiverClass 
+	] on: Exception do: [ :ex |
+		Transcript show: 'Hyphe error: ', ex messageText; cr.
+		ex resume ]
+]
+
+{ #category : 'as yet unclassified' }
 HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aClass method: aCompiledMethod [
 	"I return if it''s a class or a method, its class name, and the implementation.
 	 Now uses HypheTypeInferenceStore for type inference data."
