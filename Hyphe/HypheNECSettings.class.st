@@ -36,3 +36,8 @@ HypheNECSettings class >> lowConfidenceColor [
 HypheNECSettings class >> mediumConfidenceColor [
 ^Color R:140 G:100 B:0
 ]
+
+{ #category : 'as yet unclassified' }
+HypheNECSettings class >> verboseMode [
+^false
+]

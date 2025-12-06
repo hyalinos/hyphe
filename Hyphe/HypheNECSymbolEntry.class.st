@@ -7,18 +7,44 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
+HypheNECSymbolEntry class >> getOriginInfoString: aNode class: aClass selector: selector [
+	| receiverClass |
+	^ [
+		receiverClass := aNode
+			ifNil: [ 'Unknown receiver' ]
+			ifNotNil: [
+				aNode isMessage
+					ifTrue: [
+						(aNode receiver propertyAt: #type ifAbsent: [ 'Unknown class' ]) asString
+					]
+					ifFalse: [ 'Not a message' ] ].
+		String streamContents: [ :s |
+			s
+				nextPutAll: receiverClass;
+				space;
+				nextPut: $(;
+				nextPutAll: (aClass ifNil: [ 'Unknown class' ]) name;
+				nextPut: $);
+				nextPutAll: '>>#';
+				nextPutAll: (selector ifNil: [ 'nil' ]) asString ]
+	] on: Exception do: [ :ex |
+		Transcript show: 'Hyphe error: ', ex messageText; cr.
+		ex resume ]
+]
+
+{ #category : 'as yet unclassified' }
 HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aClass method: aCompiledMethod [
 	"I return if it''s a class or a method, its class name, and the implementation.
 	 Now uses HypheTypeInferenceStore for type inference data."
-	| styler styledText methodName inferredType confidence labelText color coloredLabel typeStart confidenceStart store inferenceResult |
-	
+	| styler styledText inferredType confidence labelText color coloredLabel typeStart confidenceStart store inferenceResult receiverInfo|
+
 	styler := SHRBTextStyler new.
 	styler classOrMetaClass: aClass.
 	styledText := styler styledTextFor: (aCompiledMethod sourceCode) asText.
 	
 	"Get method information"
-	methodName := aCompiledMethod selector asString.
-	Transcript showCr: aClass name.
+	receiverInfo:= (HypheNECSettings verboseMode) ifTrue:[self getOriginInfoString: necEntry hyNode class: aClass selector: aCompiledMethod selector] ifFalse:['method']. 
+	
 	"Lookup inference data from store"
 	store := HypheTypeInferenceStore current.
 	inferenceResult := store inferenceForClass: aClass selector: aCompiledMethod selector.
@@ -32,14 +58,14 @@ HypheNECSymbolEntry class >> overrideFor: necEntry methodSourceDescription: aCla
 			confidence := 0.0 ].
 	
 	"Build label text with method name, type, and confidence"
-	labelText := methodName , ' -> ' , inferredType , ' (' , confidence printString , ')'.
+	labelText := receiverInfo , ' → ' , inferredType , ' (' , confidence printString , ')'.
 	
 	"Determine color based on confidence"
 	color := HypheNECSettings getColorForConfidence: confidence.
 	
 	"Calculate positions for color attributes"
-	typeStart := methodName size + 5.
-	confidenceStart := methodName size + 5 + inferredType size + 2.
+	typeStart := receiverInfo size + 4.
+	confidenceStart := receiverInfo size + 4 + inferredType size + 2.
 	
 	"Create text and apply colors only to type and confidence"
 	coloredLabel := (labelText , String cr) asText.
