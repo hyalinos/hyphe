@@ -4,7 +4,8 @@ Class {
 	#classInstVars : [
 		'inferenceTools',
 		'inferenceConfidence',
-		'joinData'
+		'joinData',
+		'subscribedRepositories'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
@@ -62,6 +63,7 @@ InferenceSettings class >> initialize [
 	inferenceConfidence := self defaultConfidence.
 	inferenceTools := self defaultTools.
 	self recalculate.
+	subscribedRepositories := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
@@ -98,4 +100,24 @@ InferenceSettings class >> recalculate [
 InferenceSettings class >> restoreDefault [ 
 
 	self initialize
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> restoreDefaultConfidenceAndTools [ 
+
+	inferenceConfidence := self defaultConfidence.
+	inferenceTools := self defaultTools.
+	self recalculate.
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> subscribedRepositories [
+
+	^ subscribedRepositories
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> subscribedRepositories: aCollection [
+
+	subscribedRepositories := aCollection 
 ]

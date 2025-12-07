@@ -1,6 +1,10 @@
 Class {
 	#name : 'BaselineOfHyphe',
 	#superclass : 'BaselineOf',
+	#instVars : [
+		'downloadedLibraryNames',
+		'systemName'
+	],
 	#category : 'BaselineOfHyphe',
 	#package : 'BaselineOfHyphe'
 }
@@ -10,7 +14,10 @@ BaselineOfHyphe >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
-			spec
+			spec 
+				spec preLoadDoIt: #preload.
+				
+			spec 
 				baseline: 'TypeMe'
 					with: [ spec repository: 'github://lsafina/typeMe:main' ];
     			baseline: 'MethodProxies' 
@@ -37,8 +44,51 @@ BaselineOfHyphe >> baseline: spec [
 ]
 
 { #category : 'baselines' }
+BaselineOfHyphe >> downloadAvailableTypes [
+
+	|globalFolder systemFolder librariesFolder|
+	
+	globalFolder := 'https://raw.githubusercontent.com/hyalinos/mycelium/refs/heads/main/data/'.
+	systemFolder := globalFolder , '/system/'.
+	HyDataDownloader downloadFile: systemFolder, systemName saveWithName: systemName .
+	
+	librariesFolder := globalFolder , '/libraries/'.
+	IceRepository registry do: [ :repo | 
+		|repoName|
+		
+		repoName := repo name , '.json'.
+		(HyDataDownloader downloadFile: librariesFolder , repoName saveWithName: repoName) ifTrue: [downloadedLibraryNames add: repoName].
+	].
+]
+
+{ #category : 'baselines' }
+BaselineOfHyphe >> initialize [ 
+
+	super initialize.
+	downloadedLibraryNames := OrderedCollection new..
+	systemName := 'Pharo' , (SystemVersion current major) asString, '.json'.
+]
+
+{ #category : 'baselines' }
+BaselineOfHyphe >> initializeTypeStorage [
+
+	Mycelium initialize
+		systemTypes: (HyDataRepresentation fromJsonFile: FileLocator imageDirectory / 'data' / systemName );
+		libraryTypes:  ( downloadedLibraryNames collect: [:name |  name -> (HyDataRepresentation fromJsonFile: FileLocator imageDirectory / 'data' / name)]).
+]
+
+{ #category : 'baselines' }
 BaselineOfHyphe >> postload [
 
-"Called once the baseline finished loading"
-Transcript showCr: 'Hyphe baseline loaded'
+	self downloadAvailableTypes.
+	self initializeTypeStorage.
+	
+	
+]
+
+{ #category : 'baselines' }
+BaselineOfHyphe >> preload [
+	"create data folder in advance"
+	
+	HyDataDownloader dataFolder.
 ]

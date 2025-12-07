@@ -10,17 +10,57 @@ Class {
 	#classInstVars : [
 		'defaultFolder',
 		'systemTypes',
-		'externalTypes'
+		'libraryTypes'
 	],
 	#category : 'Hyphe-Mycelium',
 	#package : 'Hyphe',
 	#tag : 'Mycelium'
 }
 
+{ #category : 'accessing' }
+Mycelium class >> defaultFolder [
+
+	^ defaultFolder
+]
+
+{ #category : 'accessing' }
+Mycelium class >> defaultFolder: anObject [
+
+	defaultFolder := anObject
+]
+
 { #category : 'class initialization' }
 Mycelium class >> initialize [
 
-	"defaultFolder := (IceRepository repositoryNamed: #mycelium) location fullName"
+	defaultFolder := FileLocator imageDirectory / 'data'.
+	systemTypes := HyDataRepresentation new.
+	libraryTypes :=HyDataRepresentation new.
+	
+	
+]
+
+{ #category : 'accessing' }
+Mycelium class >> libraryTypes [
+
+	^ libraryTypes
+]
+
+{ #category : 'accessing' }
+Mycelium class >> libraryTypes: anObject [
+
+	libraryTypes := anObject
+]
+
+{ #category : 'accessing' }
+Mycelium class >> systemTypes [
+
+	^ systemTypes
+]
+
+{ #category : 'accessing' }
+Mycelium class >> systemTypes: anObject [
+
+	systemTypes := anObject
 ]
 
 { #category : 'initialization' }
