@@ -10,13 +10,42 @@ Class {
 		'collectionsData',
 		'methodToCompiledMethod'
 	],
+	#classVars : [
+		'ActiveCollector'
+	],
 	#category : 'Hyphe',
 	#package : 'Hyphe'
 }
 
+{ #category : 'accessing' }
+HypheReturnsCollector class >> activeCollector [
+    ^ ActiveCollector
+]
+
+{ #category : 'accessing' }
+HypheReturnsCollector class >> activeCollector: aCollector [
+    ActiveCollector := aCollector
+]
+
 { #category : 'instance creation' }
 HypheReturnsCollector class >> on: aTestCase [
     ^ self new initializeWith: aTestCase
+]
+
+{ #category : 'metalink callbacks' }
+HypheReturnsCollector class >> propagateFrom: aReceiver with: aSelector [
+    "Called by before links - delegates to active collector"
+    self activeCollector ifNotNil: [ :collector |
+        collector propagateFrom: aReceiver with: aSelector
+    ]
+]
+
+{ #category : 'metalink callbacks' }
+HypheReturnsCollector class >> record: returnValue from: aReceiver selector: aSelector [
+    "Called by after links - delegates to active collector"
+    self activeCollector ifNotNil: [ :collector |
+        collector record: returnValue from: aReceiver selector: aSelector
+    ]
 ]
 
 { #category : 'cleanup' }
@@ -52,73 +81,69 @@ HypheReturnsCollector >> initializeWith: aTestCase [
 
 { #category : 'instrumentation' }
 HypheReturnsCollector >> instrumentMethod: aCompiledMethod [
-    | methodAst afterLink collector |
+    | methodAst afterLink methodSelector methodClass sendNodes |
     
-    "Check if already instrumented"
     (instrumentedMethods includes: aCompiledMethod) ifTrue: [ ^ self ].
     
-    "Check if primitive - don't instrument but mark as seen"
     aCompiledMethod isPrimitive ifTrue: [ 
         instrumentedMethods add: aCompiledMethod.
         ^ self 
     ].
     
-    "Mark as instrumented before actually instrumenting to avoid cycles"
     instrumentedMethods add: aCompiledMethod.
     
-    logger log: 'Instrumenting: ', aCompiledMethod methodClass name, '>>', aCompiledMethod selector.
+    methodSelector := aCompiledMethod selector.
+    methodClass := aCompiledMethod methodClass.
     
-    "Get the AST"
+    logger log: 'Instrumenting: ', methodClass name, '>>', methodSelector.
+    
     methodAst := aCompiledMethod ast.
+    sendNodes := methodAst sendNodes.
     
-    "Store the mapping for this method"
     methodToCompiledMethod at: methodAst put: aCompiledMethod.
     
-    "Capture self in a variable to use in blocks"
-    collector := self.
-    
-    "Install before links on all message send nodes"
-    logger log: 'Installing before links on ', methodAst sendNodes size asString, ' send nodes'.
-    methodAst sendNodes do: [ :sendNode |
+    logger log: 'Installing before links on ', sendNodes size asString, ' send nodes'.
+    sendNodes do: [ :sendNode |
         [
             | beforeLink |
-            logger log: 'Creating before link for send node: ', sendNode selector asString.
+            logger log: 'Creating before link for: ', sendNode selector asString.
+            
             beforeLink := MetaLink new
-                metaObject: [ :rcv :sel | collector propagateFrom: rcv with: sel ];
+                metaObject: [ :rcv :sel | 
+                    | collector |
+                    collector := HypheReturnsCollector activeCollector.
+                    collector ifNotNil: [ 
+                        collector propagateFrom: rcv with: sel
+                    ]
+                ];
                 selector: #value:value:;
                 arguments: #(receiver selector);
                 control: #before.
             installedLinks add: beforeLink.
-            logger log: 'Linking before link to node: ', sendNode selector asString.
             sendNode link: beforeLink.
-            logger log: 'Successfully linked before link for: ', sendNode selector asString
+            logger log: 'Linked before link'
         ] on: Error do: [ :ex |
-            logger log: 'ERROR linking before link for ', sendNode selector asString, ': ', ex messageText.
-            logger log: 'Stack: ', ex signalerContext shortStack asString.
-            ex pass
+            logger log: 'ERROR: ', ex messageText
         ]
     ].
     
-    "Create and install after link for return values on the method itself"
     [
-        | methodClass |
-        methodClass := aCompiledMethod methodClass.
-        logger log: 'Creating after link for method: ', aCompiledMethod selector asString.
         afterLink := MetaLink new
             metaObject: [ :val :rcv :sel | 
-                collector record: val from: rcv sel: sel in: methodClass
+                | collector |
+                collector := HypheReturnsCollector activeCollector.
+                collector ifNotNil: [
+                    collector record: val from: rcv sel: sel in: methodClass
+                ]
             ];
             selector: #value:value:value:;
             arguments: #(value receiver selector);
             control: #after.
         installedLinks add: afterLink.
-        logger log: 'Linking after link to method AST'.
         methodAst link: afterLink.
-        logger log: 'Successfully linked after link'
+        logger log: 'Linked after link'
     ] on: Error do: [ :ex |
-        logger log: 'ERROR linking after link: ', ex messageText.
-        logger log: 'Stack: ', ex signalerContext shortStack asString.
-        ex pass
+        logger log: 'ERROR: ', ex messageText
     ]
 ]
 
@@ -140,18 +165,25 @@ HypheReturnsCollector >> propagateFrom: aReceiver with: aSelector [
     [
         | compiledMethod |
         
+        logger log: '[PROPAGATE] Called with receiver: ', aReceiver class name, ' selector: ', aSelector asString.
+        
         "Lookup the method that will be executed"
         compiledMethod := aReceiver class lookupSelector: aSelector.
         
         compiledMethod ifNil: [ 
-            logger log: 'DNU detected for selector: ', aSelector.
+            logger log: '[PROPAGATE] DNU detected for selector: ', aSelector.
             ^ self 
         ].
         
+        logger log: '[PROPAGATE] Found method: ', compiledMethod methodClass name, '>>', compiledMethod selector.
+        
         "Propagate instrumentation to the called method"
-        self instrumentMethod: compiledMethod
+        self instrumentMethod: compiledMethod.
+        
+        logger log: '[PROPAGATE] Instrumentation complete for: ', aSelector asString
     ] on: Error do: [ :ex |
-        logger log: 'Error in propagateFrom:with: ', ex messageText
+        logger log: '[PROPAGATE] Error in propagateFrom:with: ', ex messageText.
+        logger log: '[PROPAGATE] Stack: ', ex signalerContext shortStack asString
     ]
 ]
 
@@ -169,6 +201,27 @@ HypheReturnsCollector >> record: returnValue from: aReceiver sel: aSelector in: 
     ]
 ]
 
+{ #category : 'data collection' }
+HypheReturnsCollector >> record: returnValue from: aReceiver selector: aSelector [
+    [
+        | receiverClass returnClass dataPoint compiledMethod methodClass |
+        
+        "Look up the method to get its defining class"
+        compiledMethod := aReceiver class lookupSelector: aSelector.
+        methodClass := compiledMethod 
+            ifNotNil: [ compiledMethod methodClass ]
+            ifNil: [ aReceiver class "fallback" ].
+        
+        receiverClass := aReceiver class.
+        returnClass := returnValue class.
+        dataPoint := { receiverClass . aSelector . methodClass . returnClass }.
+        collectionsData add: dataPoint.
+        logger log: 'Collected: ', receiverClass name, ' >> ', aSelector, ' (method from: ', methodClass name, ', returns: ', returnClass name, ')'
+    ] on: Error do: [ :ex |
+        logger log: 'Error in record:from:selector: ', ex messageText
+    ]
+]
+
 { #category : 'accessing' }
 HypheReturnsCollector >> result [
     ^ result
@@ -181,6 +234,8 @@ HypheReturnsCollector >> run [
     result status: #running.
     startTime := DateAndTime now.
     
+    self class activeCollector: self.
+    
     [ 
         [ 
             self instrumentTestCase.
@@ -191,10 +246,10 @@ HypheReturnsCollector >> run [
         ] on: Error do: [ :ex |
             result status: (ex class name = #TestFailure ifTrue: [ #testFailure ] ifFalse: [ #error ]).
             result errorMessage: ex messageText.
-            logger log: 'Error during execution: ', ex messageText.
-            logger log: 'Stack: ', ex signalerContext shortStack asString
+            logger log: 'Error during execution: ', ex messageText
         ]
     ] ensure: [
+        self class activeCollector: nil.
         endTime := DateAndTime now.
         result executionTime: (endTime - startTime).
         self cleanup.
