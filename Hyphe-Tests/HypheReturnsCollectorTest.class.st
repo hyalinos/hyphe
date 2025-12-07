@@ -5,6 +5,19 @@ Class {
 	#package : 'Hyphe-Tests'
 }
 
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testAndOrInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testAndOr.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
 { #category : 'tests - data collection' }
 HypheReturnsCollectorTest >> testArithmeticCollection [
     | testCase collector result |
@@ -15,6 +28,32 @@ HypheReturnsCollectorTest >> testArithmeticCollection [
     
     self assert: result isCompleted.
     self assert: result collections notEmpty
+]
+
+{ #category : 'tests - blocks' }
+HypheReturnsCollectorTest >> testBlockValueInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testBlockValue.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
+{ #category : 'tests - blocks' }
+HypheReturnsCollectorTest >> testBlockWithArgumentInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testBlockWithArgument.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
 ]
 
 { #category : 'tests - instrumentation' }
@@ -29,9 +68,9 @@ HypheReturnsCollectorTest >> testChainedCallsPropagation [
     collections := result collections.
     
     "Should have instrumented and collected from firstMethod, secondMethod, and thirdMethod"
-    self assert: (collections anySatisfy: [ :data | data second = #firstMethod ]).
-    self assert: (collections anySatisfy: [ :data | data second = #secondMethod ]).
-    self assert: (collections anySatisfy: [ :data | data second = #thirdMethod ])
+    self assert: (collections anySatisfy: [ :item | item methodSelector = #firstMethod ]).
+    self assert: (collections anySatisfy: [ :item | item methodSelector = #secondMethod ]).
+    self assert: (collections anySatisfy: [ :item | item methodSelector = #thirdMethod ])
 ]
 
 { #category : 'tests - error handling' }
@@ -63,6 +102,19 @@ HypheReturnsCollectorTest >> testCollectorCreation [
     self assert: collector logger notNil
 ]
 
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testEnsureInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testEnsure.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
 { #category : 'tests - result' }
 HypheReturnsCollectorTest >> testExecutionTimeTracking [
     | testCase collector result |
@@ -87,6 +139,32 @@ HypheReturnsCollectorTest >> testHandleFailingTest [
     self deny: result isCompleted.
     self assert: result status = #error."THIS WILL LIKELY TRIGGER AN ERROR NOT A TESTFAILURE"
     self assert: result errorMessage notNil
+]
+
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testIfNilIfNotNilInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testIfNilIfNotNil.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testIfNilIfNotNilWithValueInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testIfNilIfNotNilWithValue.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
 ]
 
 { #category : 'tests - logger' }
@@ -117,17 +195,16 @@ HypheReturnsCollectorTest >> testLoggerTranscriptCanBeDisabled [
 
 { #category : 'tests - data collection' }
 HypheReturnsCollectorTest >> testMethodClassCollection [
-    | testCase collector result collections dataPoint |
+    | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     collector := HypheReturnsCollector on: testCase.
     result := collector run.
     
     collections := result collections.
-    dataPoint := collections detect: [ :data | data second = #testSimpleReturn ].
+    dataItem := collections detect: [ :item | item methodSelector = #testSimpleReturn ].
     
-    "Third element is method class"
-    self assert: dataPoint third = HypheReturnsCollectorTestFixture
+    self assert: dataItem definingClass = HypheReturnsCollectorTestFixture
 ]
 
 { #category : 'tests - data collection' }
@@ -141,11 +218,24 @@ HypheReturnsCollectorTest >> testMixedReturnTypes [
     collections := result collections.
     
     "Should have different return types"
-    stringData := collections detect: [ :data | data second = #getStringValue ].
-    numberData := collections detect: [ :data | data second = #getNumberValue ].
+    stringData := collections detect: [ :item | item methodSelector = #getStringValue ].
+    numberData := collections detect: [ :item | item methodSelector = #getNumberValue ].
     
-    self assert: stringData fourth = ByteString.
-    self assert: numberData fourth = SmallInteger
+    self assert: stringData returnClass = ByteString.
+    self assert: numberData returnClass = SmallInteger
+]
+
+{ #category : 'tests - blocks' }
+HypheReturnsCollectorTest >> testNestedBlocksInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testNestedBlocks.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
 ]
 
 { #category : 'tests - edge cases' }
@@ -170,6 +260,19 @@ HypheReturnsCollectorTest >> testNoDuplicateInstrumentation [
     self assert: secondSize equals: firstSize
 ]
 
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testOnDoInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testOnDo.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
 { #category : 'tests - edge cases' }
 HypheReturnsCollectorTest >> testPrimitiveMethodHandling [
     | testCase collector result |
@@ -184,7 +287,7 @@ HypheReturnsCollectorTest >> testPrimitiveMethodHandling [
 
 { #category : 'tests - data collection' }
 HypheReturnsCollectorTest >> testReceiverClassCollection [
-    | testCase collector result collections dataPoint |
+    | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testWithMessageSends.
     collector := HypheReturnsCollector on: testCase.
@@ -192,15 +295,14 @@ HypheReturnsCollectorTest >> testReceiverClassCollection [
     
     collections := result collections.
     "Find helper method data point"
-    dataPoint := collections detect: [ :data | data second = #helperMethod ].
+    dataItem := collections detect: [ :item | item methodSelector = #helperMethod ].
     
-    "First element is receiver class"
-    self assert: dataPoint first = HypheReturnsCollectorTestFixture
+    self assert: dataItem receiverClass = HypheReturnsCollectorTestFixture
 ]
 
 { #category : 'tests - data collection' }
 HypheReturnsCollectorTest >> testReturnTypeCollection [
-    | testCase collector result collections dataPoint |
+    | testCase collector result collections dataItem |
     testCase := HypheReturnsCollectorTestFixture new.
     testCase setTestSelector: #testSimpleReturn.
     collector := HypheReturnsCollector on: testCase.
@@ -208,10 +310,9 @@ HypheReturnsCollectorTest >> testReturnTypeCollection [
     
     collections := result collections.
     "Find the data point for testSimpleReturn"
-    dataPoint := collections detect: [ :data | data second = #testSimpleReturn ].
+    dataItem := collections detect: [ :item | item methodSelector = #testSimpleReturn ].
     
-    "dataPoint structure: {receiverClass . selector . methodClass . returnClass}"
-    self assert: dataPoint fourth = ByteString "Return type should be String"
+    self assert: dataItem returnClass = ByteString "Return type should be String"
 ]
 
 { #category : 'tests - basic' }
@@ -238,6 +339,32 @@ HypheReturnsCollectorTest >> testStatusTracking [
     self assert: result status = #completed
 ]
 
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testToDoInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testToDo.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
+{ #category : 'tests - control flow' }
+HypheReturnsCollectorTest >> testWhileTrueInstrumentation [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testWhileTrue.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty
+]
+
 { #category : 'tests - instrumentation' }
 HypheReturnsCollectorTest >> testWithMessageSends [
     | testCase collector result collections |
@@ -251,5 +378,21 @@ HypheReturnsCollectorTest >> testWithMessageSends [
     self assert: collections notEmpty.
     
     "Should have collected data from both testWithMessageSends and helperMethod"
-    self assert: (collections anySatisfy: [ :data | data second = #helperMethod ])
+    self assert: (collections anySatisfy: [ :item | item methodSelector = #helperMethod ])
+]
+
+{ #category : 'tests - instrumentation' }
+HypheReturnsCollectorTest >> testWithOrderedCollection [
+    | testCase collector result collections |
+    testCase := HypheReturnsCollectorTestFixture new.
+    testCase setTestSelector: #testWithOrderedCollection.
+    collector := HypheReturnsCollector on: testCase.
+    result := collector run.
+    
+    self assert: result isCompleted.
+    collections := result collections.
+    self assert: collections notEmpty.
+    
+    "Should have collected data from both testWithMessageSends and helperMethod"
+    self assert: (collections anySatisfy: [ :item | item methodSelector = #helperMethod ])
 ]
