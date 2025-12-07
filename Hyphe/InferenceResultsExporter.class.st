@@ -37,20 +37,16 @@ InferenceResultsExporter class >> export: results toFile: aFilePath [
 
 { #category : 'initialization' }
 InferenceResultsExporter >> addReturnTypes: typeSet toMethod: method [
-    "Add return types to method, avoiding duplicates"
-    | existingTypes existingTypeNames |
-    existingTypes := method returnTypes.
-    existingTypeNames := existingTypes collect: [ :t | t name ].
-    
-    "Add only new types"
-    typeSet do: [ :typeName |
-        (existingTypeNames includes: typeName) ifFalse: [
-            | newType |
-            newType := HyType new
-                name: typeName;
-                source: defaultSource;
-                yourself.
-            method addReturnType: newType ] ]
+     
+	 ((method returnTypes) anySatisfy: [:t | (typeSet includes: t name) and: (t source = defaultSource)])
+	 ifFalse: [
+		| newType |
+		newType := HyType new
+		name: (typeSet anyOne) asSymbol;
+ 		source: defaultSource asSymbol;
+ 	   yourself.
+      method addReturnType: newType 
+	]
 ]
 
 { #category : 'accessing' }

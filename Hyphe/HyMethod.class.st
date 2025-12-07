@@ -5,7 +5,7 @@ Class {
 		'name',
 		'parameters',
 		'returnTypes',
-		'confidence'
+		'returnTypeConfidence'
 	],
 	#category : 'Hyphe-Data',
 	#package : 'Hyphe',
@@ -25,6 +25,12 @@ HyMethod class >> fromJsonDictionary: aDict [
         instance addReturnType: (HyType fromJsonDictionary: typeDict) ].
     
     ^ instance
+]
+
+{ #category : 'accessing' }
+HyMethod >> InferenceResultsExporter [
+
+	^ returnTypeConfidence
 ]
 
 { #category : 'adding' }
@@ -68,18 +74,6 @@ HyMethod >> asJsonDictionary [
         dict at: 'returnTypes' put: (returnTypes collect: [ :type | type asJsonDictionary ]) asArray ].
     
     ^ dict
-]
-
-{ #category : 'accessing' }
-HyMethod >> confidence [
-
-	^ confidence
-]
-
-{ #category : 'accessing' }
-HyMethod >> confidence: anObject [
-
-	confidence := anObject
 ]
 
 { #category : 'adding' }
@@ -147,6 +141,12 @@ HyMethod >> parameters [
 HyMethod >> parameters: anObject [
 
 	parameters := anObject
+]
+
+{ #category : 'accessing' }
+HyMethod >> returnTypeConfidence: anObject [
+
+	returnTypeConfidence := anObject
 ]
 
 { #category : 'accessing' }

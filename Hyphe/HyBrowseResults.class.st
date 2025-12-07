@@ -2,12 +2,33 @@ Class {
 	#name : 'HyBrowseResults',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'table'
+		'table',
+		'data'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
 	#tag : 'UI'
 }
+
+{ #category : 'as yet unclassified' }
+HyBrowseResults class >> openWithData: data [
+	
+	^ self new
+		data: data;
+		open
+]
+
+{ #category : 'accessing' }
+HyBrowseResults >> data [
+
+	^ data
+]
+
+{ #category : 'accessing' }
+HyBrowseResults >> data: anObject [
+
+	data := anObject
+]
 
 { #category : 'layout' }
 HyBrowseResults >> defaultLayout [
@@ -28,8 +49,20 @@ HyBrowseResults >> initializePresenters [
 		addColumn: (SpStringTableColumn title: 'Name' evaluated: [ :item | item name ]) beSortable;
 		addColumn: (SpStringTableColumn title: 'Type' evaluated: [ :item | item type ]) beSortable;
 		addColumn: (SpStringTableColumn title: 'Confidence Level' evaluated: [ :item | item  ]) beSortable;
-		addColumn: (SpStringTableColumn title: 'Score' evaluated: [ :item | item score ]) beSortable;
-		addColumn: (SpStringTableColumn title: 'Sources' evaluated: [ :item | item sources ]) beSortable. 
+		addColumn: (SpStringTableColumn title: 'Score' evaluated: [ :item | item score ]) beSortable";
+		addColumn: (SpStringTableColumn title: 'Sources' evaluated: [ :item | item sources ]) beSortable". 
 		
-		"table items:"
+		table items: data.
+]
+
+{ #category : 'accessing' }
+HyBrowseResults >> table [
+
+	^ table
+]
+
+{ #category : 'accessing' }
+HyBrowseResults >> table: anObject [
+
+	table := anObject
 ]

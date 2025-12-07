@@ -73,8 +73,6 @@ HyMergeStrategy >> initializeSourceCategories [
 
 { #category : 'initialization' }
 HyMergeStrategy >> mergeTypes: typesCollection [
-    "Template method - subclasses implement specific logic
-    Returns Dictionary with #confidence, #label, #reasoning"
 
     self subclassResponsibility
 ]

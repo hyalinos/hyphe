@@ -1,3 +1,11 @@
+"
+This class stores all information related to inference settings:
+
+	- Tools inference confidence
+	- Confidence range
+	- Tools display names to class names
+	- Repositories subscribed for analysis
+"
 Class {
 	#name : 'InferenceSettings',
 	#superclass : 'Object',
@@ -5,7 +13,10 @@ Class {
 		'inferenceTools',
 		'inferenceConfidence',
 		'joinData',
-		'subscribedRepositories'
+		'subscribedRepositories',
+		'toolNameToClass',
+		'defaultMergeStrategy',
+		'mergeStrategies'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
@@ -20,6 +31,12 @@ InferenceSettings class >> defaultConfidence [
 		  add: {'0.61'. '0.8'. 'Medium'};
 		  add: {'0.81'. '1.0'. 'High'};
 		  yourself
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> defaultMergeStrategy [ 
+
+	^ defaultMergeStrategy
 ]
 
 { #category : 'class initialization' }
@@ -64,6 +81,14 @@ InferenceSettings class >> initialize [
 	inferenceTools := self defaultTools.
 	self recalculate.
 	subscribedRepositories := OrderedCollection new.
+	toolNameToClass := Dictionary new at: 'AST-based inference' put: TypeMeConfident;
+		at: 'Type Info Tools' put: TITMethodReturnTypesGatherer;
+		at: 'Name-based Heuristics' put: TypeMeNameBased; 
+		yourself. 
+		"at: 'Offline Test Profiling' put ."
+	defaultMergeStrategy := HyWeightedVotingStrategy.
+	mergeStrategies := Set withAll: (HyWeightedVotingStrategy, HyTieredStrategy, HyConsensusStrategy).
+		
 ]
 
 { #category : 'accessing' }
@@ -120,4 +145,11 @@ InferenceSettings class >> subscribedRepositories [
 InferenceSettings class >> subscribedRepositories: aCollection [
 
 	subscribedRepositories := aCollection 
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> toolNameToClass [
+
+	^ toolNameToClass 
+		
 ]

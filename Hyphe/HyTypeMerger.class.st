@@ -142,27 +142,27 @@ HyTypeMerger >> labelForConfidence: conf [
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeForObject: anObject withTypes: typesCollection [
-    "Apply strategy to aggregate types and set confidence"
+
     | result |
-    
+
     typesCollection ifEmpty: [ 
         anObject confidence: 0.0.
         ^ self ].
     
-    result := strategy mergeTypes: typesCollection.
-    anObject confidence: (result at: #confidence)
+    result := strategy new mergeTypes: typesCollection.
+    anObject returnTypeConfidence: (result at: #confidence)
 
 ]
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeHyTypes: aHyDataRepresentation [
-    "Process entire HyDataRepresentation and set confidence"
-    hyData := aHyDataRepresentation.
+     
+	hyData := aHyDataRepresentation.
     
     hyData packages do: [ :package |
         package classes do: [ :class |
-            class variables do: [ :variable |
-        			self mergeForObject: variable withTypes: variable types ].
+           " class variables do: [ :variable |
+        			self mergeForObject: variable withTypes: variable types ]."
         class methods do: [ :method | self mergeMethodTypes: method ]. 
 		] 
 	]
@@ -171,12 +171,12 @@ HyTypeMerger >> mergeHyTypes: aHyDataRepresentation [
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeMethodTypes: aHyMethod [
-    "Aggregate types for method"
+ 
     aHyMethod returnTypes ifNotEmpty: [
         self mergeForObject: aHyMethod withTypes: aHyMethod returnTypes ].
     
-    aHyMethod parameters do: [ :param |
-        self mergeForObject: param withTypes: param types ]
+    "aHyMethod parameters do: [ :param |
+        self mergeForObject: param withTypes: param types ]"
 ]
 
 { #category : 'as yet unclassified' }

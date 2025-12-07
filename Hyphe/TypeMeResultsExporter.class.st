@@ -9,7 +9,7 @@ Class {
 { #category : 'initialization' }
 TypeMeResultsExporter >> doExport [
 
-	(self groupTypeResults: source typeResults) keysAndValuesDo: [
+	(self groupTypeResults: source) keysAndValuesDo: [
 		:packageName
 		:classesDict |
 		self processPackage: packageName classes: classesDict ]
@@ -41,14 +41,6 @@ TypeMeResultsExporter >> groupTypeResults: typeResults [
         methodSet add: typeName ].
     
     ^ grouped
-]
-
-{ #category : 'initialization' }
-TypeMeResultsExporter >> initialize [
-
-	super initialize.
-	defaultSource := 'TypeMe'.
-	defaultConfidence := 0.9
 ]
 
 { #category : 'initialization' }

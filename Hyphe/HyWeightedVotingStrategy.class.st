@@ -40,11 +40,9 @@ HyWeightedVotingStrategy >> labelForConfidence: conf [
 
 { #category : 'initialization' }
 HyWeightedVotingStrategy >> mergeTypes: typesCollection [
-    "Apply weighted voting"
-
     | votes totalWeight maxVote winnerTypes confidence |
-    
-    typesCollection ifEmpty: [
+      
+	typesCollection ifEmpty: [
         ^ Dictionary new
             at: #confidence put: 0.0;
             at: #label put: 'unknown';
@@ -59,7 +57,7 @@ HyWeightedVotingStrategy >> mergeTypes: typesCollection [
         | category weight typeStr |
         category := self categoryForSource: hyType source.
         weight := categoryWeights at: category ifAbsent: [ 0.5 ].
-        typeStr := hyType type.
+        typeStr := hyType name.
         
         votes at: typeStr put: (votes at: typeStr ifAbsent: [ 0 ]) + weight.
         totalWeight := totalWeight + weight ].

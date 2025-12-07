@@ -253,15 +253,19 @@ HyInferencePresenter >> restoreToDefault [
 { #category : 'initialization' }
 HyInferencePresenter >> runAnalysis [ 
 	
-	| selectedPkgs selectedTools |
+	| selectedPkgs selectedTools results|
+	
 	selectedPkgs := selectedPackageList items.
-	selectedTools := toolsTable selectedItems.
+	selectedTools := ((toolsTable selectedItems) collect: [:t | t at:1]) collect: [:t | InferenceSettings toolNameToClass at: t ]. 
 	
 	selectedPkgs ifEmpty: [ ^ self inform: 'Please select at least one package' ].
 	selectedTools ifEmpty: [ ^ self inform: 'Please select at least one tool' ].
 	
 	self inform: 'Running analysis on ', selectedPkgs size asString, ' package(s) with ', 
 		selectedTools size asString, ' tool(s)'.
+	
+	results := InferenceExecutor groupForPresenter: (InferenceExecutor executeWithPackages: selectedPkgs tools: selectedTools mergeStrategy: HyWeightedVotingStrategy).  1 halt.
+	HyBrowseResults openWithData: results.
 	
 	self delete
 ]
