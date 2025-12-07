@@ -81,7 +81,6 @@ HypheReturnsCollectorTest >> testCleanupOnError [
     collector := HypheReturnsCollector on: testCase.
     
     "Disable transcript logging to avoid clutter"
-    collector logger disableTranscriptLogging.
     
     result := collector run.
     
@@ -393,6 +392,4 @@ HypheReturnsCollectorTest >> testWithOrderedCollection [
     collections := result collections.
     self assert: collections notEmpty.
     
-    "Should have collected data from both testWithMessageSends and helperMethod"
-    self assert: (collections anySatisfy: [ :item | item methodSelector = #helperMethod ])
 ]

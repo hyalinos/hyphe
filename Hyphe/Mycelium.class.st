@@ -20,7 +20,7 @@ Class {
 { #category : 'class initialization' }
 Mycelium class >> initialize [
 
-	defaultFolder := (IceRepository repositoryNamed: #mycelium) location fullName
+	"defaultFolder := (IceRepository repositoryNamed: #mycelium) location fullName"
 ]
 
 { #category : 'initialization' }

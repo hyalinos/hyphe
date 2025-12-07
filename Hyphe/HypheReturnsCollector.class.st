@@ -166,7 +166,6 @@ HypheReturnsCollector >> logger [
 { #category : 'instrumentation' }
 HypheReturnsCollector >> propagateInstrumentationTo: aCompiledMethod [
     "Called by MetaLink before a message send executes.
-    ALWAYS re-instrument because Pharo replaces ReflectiveMethods!
     Guard prevents recursive instrumentation."
     
     "GUARD: If inside instrumentation, skip"
@@ -204,30 +203,6 @@ HypheReturnsCollector >> propagationLink [
         installedLinks add: propagationLinkCache.
         propagationLinkCache
     ]
-]
-
-{ #category : 'data collection' }
-HypheReturnsCollector >> recordReturn: returnValue from: aReceiver selector: aSelector definingClass: aDefiningClass [
-    "Record a return value from a method execution"
-    [
-        | receiverClass returnClass dataPoint |
-        
-        receiverClass := aReceiver class.
-        returnClass := returnValue class.
-        dataPoint := { receiverClass . aSelector . aDefiningClass . returnClass }.
-        collectionsData add: dataPoint.
-        
-        logger log: 'Recorded: ', receiverClass name, ' >> ', aSelector, 
-                    ' returns ', returnClass name, ' (from: ', aDefiningClass name, ')'.
-    ] on: Error do: [ :ex |
-        logger log: 'Error recording return: ', ex messageText
-    ]
-]
-
-{ #category : 'data collection' }
-HypheReturnsCollector >> recordReturn: returnValue from: aReceiver selector: aSelector method: aCompiledMethod [
-    "Old recording method - kept for backward compatibility but not used"
-    self recordReturnValue: returnValue inMethod: aCompiledMethod
 ]
 
 { #category : 'data collection' }
@@ -319,49 +294,48 @@ HypheReturnsCollector >> result [
 
 { #category : 'running' }
 HypheReturnsCollector >> run [
-    | startTime endTime testReturnValue semaphore |
-    logger log: 'Starting test execution with instrumentation'.
-    result status: #running.
-    startTime := DateAndTime now.
-    semaphore := Semaphore new.
-    
-    self class activeCollector: self.
-    
-    [
-        "Set owning process in the forked process"
-        owningProcess := Processor activeProcess.
-        
-        [ 
-            [ 
-                self instrumentTestCase.
-                logger log: 'Running test case'.
-                "Use runCaseForHyphe to run setUp/tearDown and get actual return value"
-                testReturnValue := testCase runCaseForHyphe.
-                "Manually record test method return value"
-                self recordReturnValue: testReturnValue inMethod: (testCase class lookupSelector: testCase selector).
-                result status: #completed.
-                logger log: 'Test completed successfully'
-            ] on: Error do: [ :ex |
-                result status: (ex class name = #TestFailure ifTrue: [ #testFailure ] ifFalse: [ #error ]).
-                result errorMessage: ex messageText.
-                logger log: 'Error during execution: ', ex messageText
-            ]
-        ] ensure: [
-            self class activeCollector: nil.
-            endTime := DateAndTime now.
-            result executionTime: (endTime - startTime).
-            self cleanup.
-            logger log: 'Cleanup completed'.
-            semaphore signal
-        ]
-    ] fork.
-    
-    "Wait for completion"
-    semaphore wait.
-    
-    result collections: collectionsData.
-    logger log: 'Collected ', collectionsData size asString, ' data points'.
-    ^ result
+
+	| startTime endTime testReturnValue |
+	logger log: 'Starting test execution with instrumentation'.
+	result status: #running.
+	startTime := DateAndTime now.
+
+	self class activeCollector: self.
+
+
+	"Set owning process in the forked process"
+	owningProcess := Processor activeProcess.
+
+	[
+		[
+			self instrumentTestCase.
+			logger log: 'Running test case'.
+			"Use runCaseForHyphe to run setUp/tearDown and get actual return value"
+			testReturnValue := testCase runCaseForHyphe.
+			"Manually record test method return value"
+			self
+				recordReturnValue: testReturnValue
+				inMethod: (testCase class lookupSelector: testCase selector).
+			result status: #completed.
+			logger log: 'Test completed successfully' ]
+			on: Error
+			do: [ :ex |
+					result status: (ex class name = #TestFailure
+							 ifTrue: [ #testFailure ]
+							 ifFalse: [ #error ]).
+					result errorMessage: ex messageText.
+					logger log: 'Error during execution: ' , ex messageText ] ]
+		ensure: [
+				self class activeCollector: nil.
+				endTime := DateAndTime now.
+				result executionTime: endTime - startTime.
+				self cleanup.
+				logger log: 'Cleanup completed' ].
+
+	result collections: collectionsData.
+	logger log:
+		'Collected ' , collectionsData size asString , ' data points'.
+	^ result
 ]
 
 { #category : 'running' }
