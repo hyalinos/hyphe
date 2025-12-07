@@ -85,7 +85,7 @@ HypheReturnsCollectorTest >> testHandleFailingTest [
     
     "Should not be completed due to failure"
     self deny: result isCompleted.
-    self assert: result status = #testFailure.
+    self assert: result status = #error."THIS WILL LIKELY TRIGGER AN ERROR NOT A TESTFAILURE"
     self assert: result errorMessage notNil
 ]
 

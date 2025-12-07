@@ -211,24 +211,50 @@ HypheReturnsCollector >> recordReturn: returnValue from: aReceiver selector: aSe
 { #category : 'data collection' }
 HypheReturnsCollector >> recordReturnValue: returnValue inMethod: aCompiledMethod [
     "Record a return value from a return node.
-    Called with reifications available on return nodes."
+    Ultra-defensive: catch ALL errors to prevent breaking test execution."
+    
+    "Wrap EVERYTHING in error handler - even parameter access"
     [
         | methodClass methodSelector receiverClass returnClass dataPoint |
         
-        methodClass := aCompiledMethod methodClass.
-        methodSelector := aCompiledMethod selector.
+        "Try to get method info"
+        [ 
+            methodClass := aCompiledMethod methodClass.
+            methodSelector := aCompiledMethod selector.
+        ] on: Error do: [ :ex |
+            "If we can't even get method info, use fallback"
+            methodClass := #UnknownClass.
+            methodSelector := #unknownSelector.
+        ].
         
-        "For receiver class, we use the method's class (self's class)"
-        receiverClass := methodClass.
-        returnClass := returnValue class.
+        "Try to get receiver class"
+        [
+            receiverClass := methodClass.
+        ] on: Error do: [ :ex |
+            receiverClass := #UnknownReceiver.
+        ].
         
+        "Try to get return class"
+        [
+            returnClass := returnValue class.
+        ] on: Error do: [ :ex |
+            "If returnValue itself errors, mark it"
+            returnClass := #ErrorGettingReturnType.
+        ].
+        
+        "Create and add data point"
         dataPoint := { receiverClass . methodSelector . methodClass . returnClass }.
         collectionsData add: dataPoint.
         
-        logger log: '[RECORD] ', methodClass name, ' >> ', methodSelector, 
-                    ' returns ', returnClass name.
+        logger log: '[RECORD] ', receiverClass printString, ' >> ', methodSelector printString, 
+                    ' returns ', returnClass printString.
+                    
     ] on: Error do: [ :ex |
-        logger log: '[RECORD] Error: ', ex messageText
+        "Ultimate fallback: if ANYTHING fails, silently continue"
+        "Don't even try to log, just survive"
+        [ 
+            Transcript show: '[COLLECTOR] Silent error in recordReturnValue: ', ex messageText; cr.
+        ] on: Error do: [ "ignore even this" ]
     ]
 ]
 
