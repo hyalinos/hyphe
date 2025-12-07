@@ -9,7 +9,7 @@ Class {
 { #category : 'as yet unclassified' }
 HyDataDownloader class >> dataFolder [
     | folder |
-    folder := FileLocator imageDirectory / 'Data'.
+    folder := FileLocator imageDirectory / 'data'.
     folder asFileReference ensureCreateDirectory .
     ^ folder
 ]
