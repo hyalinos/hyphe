@@ -1,3 +1,10 @@
+"
+Shows menu to choose Hyalinos tools:
+
+	- Run analysis on selected packages
+	- Subscribe repositories/packages to infer types when they are changed
+	- Show results
+"
 Class {
 	#name : 'HyMainPresenter',
 	#superclass : 'SpPresenter',
@@ -32,26 +39,26 @@ HyMainPresenter >> defaultLayout [
 
 { #category : 'layout' }
 HyMainPresenter >> initializePresenters [
-	
+
 	runButton := self newButton
-		label: 'Run inference';
-		action: [ self runInference ];
-		yourself.
-	
+		             label: 'Run inference';
+		             action: [ self runInference ];
+		             yourself.
+
 	subscribeButton := self newButton
-		label: 'Subscribe packages';
-		action: [ self subscribePackages ];
-		yourself.
-	
+		                   label: 'Subscribe repositories';
+		                   action: [ self subscribePackages ];
+		                   yourself.
+
 	viewButton := self newButton
-		label: 'View results';
-		action: [ self viewResults ];
-		yourself.
-	
+		              label: 'View results';
+		              action: [ self viewResults ];
+		              yourself.
+
 	closeButton := self newButton
-		label: 'Close';
-		action: [ self close ];
-		yourself
+		               label: 'Close';
+		               action: [ self close ];
+		               yourself
 ]
 
 { #category : 'layout' }
@@ -64,15 +71,22 @@ HyMainPresenter >> initializeWindow: aWindowPresenter [
 
 { #category : 'layout' }
 HyMainPresenter >> runInference [
-	"Action for Run inference button"
+
+	HyInferencePresenter new open.
 ]
 
 { #category : 'layout' }
 HyMainPresenter >> subscribePackages [
-	"Action for Subscribe packages button"
+
+	HyRepositorySubscriptionPresenter new open
+
+	
 ]
 
 { #category : 'layout' }
 HyMainPresenter >> viewResults [
-	"Action for View results button"
+	
+	HyBrowseResults new open.
+
+	
 ]

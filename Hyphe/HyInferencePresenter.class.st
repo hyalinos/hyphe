@@ -1,0 +1,286 @@
+"
+Show Hyalinos inference tools and settings
+
+	- Choose inference scope
+	- Choose tools
+"
+Class {
+	#name : 'HyInferencePresenter',
+	#superclass : 'SpPresenter',
+	#instVars : [
+		'packageList',
+		'selectedPackageList',
+		'addButton',
+		'removeButton',
+		'clearButton',
+		'toolsTable',
+		'selectedTools',
+		'selectAllCheckbox',
+		'changeScoreButton',
+		'changeLevelButton',
+		'restoreDefaultButton',
+		'runButton',
+		'cancelButton',
+		'toolsData'
+	],
+	#category : 'Hyphe-UI',
+	#package : 'Hyphe',
+	#tag : 'UI'
+}
+
+{ #category : 'initialization' }
+HyInferencePresenter >> addSelectedPackages [ 
+	
+	| selected current |
+	selected := packageList selection selectedItems.
+	current := selectedPackageList items asOrderedCollection.
+	
+	selected do: [ :pkg |
+		(current includes: pkg) ifFalse: [ current add: pkg ] ].
+	
+	selectedPackageList items: current
+
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> changeLevel [
+	
+	HyConfidenceLevelPresenter openWithData: ({ 
+		Dictionary newFrom: { #min -> 0.0. #max -> 0.3. #level -> 'Low' }.
+		Dictionary newFrom: { #min -> 0.3. #max -> 0.7. #level -> 'Medium' }.
+		Dictionary newFrom: { #min -> 0.7. #max -> 1.0. #level -> 'High' }
+	})
+
+	
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> changeScore [
+
+	HyToolsConfidencePresenter openWithData: toolsData 
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> clearSelectedPackages [ 
+	
+	selectedPackageList items: OrderedCollection new
+
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> defaultLayout [
+
+	^ SpBoxLayout newVertical
+		  add: 'Scope:' expand: false;
+		  add: (SpBoxLayout newLeftToRight
+				   spacing: 10;
+				   add: packageList;
+				   add: (SpBoxLayout newTopToBottom
+						    vAlignCenter;
+						    spacing: 5;
+						    add: #addButton expand: false;
+						    add: #removeButton expand: false;
+						    add: #clearButton expand: false;
+						    yourself);
+				   add: selectedPackageList;	
+				   yourself);
+		  add: 'Select tools:' expand: false;			
+		  add: toolsTable height: 150;
+		  add: selectAllCheckbox expand: false;
+		  add: (SpBoxLayout newHorizontal
+				   add: changeScoreButton;
+				   add: changeLevelButton;
+				   add: restoreDefaultButton;
+				   yourself)
+		  expand: false;
+		  add: '' expand: false;	
+		  add: (SpBoxLayout newHorizontal
+					hAlignCenter;
+				   add: runButton;
+				   add: cancelButton;
+				   yourself)
+		  expand: false;
+		  yourself
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> getAllPackages [
+
+	^ PackageOrganizer default packages
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> initialize [
+
+	super initialize.
+	self initializeToolsData.
+	self updateToolsTable.
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> initializePresenters [
+
+	packageList := self newList.
+	packageList
+		items: (self getAllPackages sorted: [ :a :b | a name <= b name ]);
+		beMultipleSelection;
+		display: [ :pkg | pkg name ].
+
+	selectedPackageList := self newList.
+	selectedPackageList
+		beMultipleSelection;
+		display: [ :pkg | pkg name ].
+
+	addButton := self newButton.
+	addButton
+		label: 'Add >>';
+		action: [ self addSelectedPackages ].
+
+	removeButton := self newButton.
+	removeButton
+		label: '<< Remove';
+		action: [ self removeSelectedPackages ].
+
+	clearButton := self newButton.
+	clearButton
+		label: 'Clear';
+		action: [ self clearSelectedPackages ].
+
+	toolsTable := self newTable.
+	toolsTable
+		addColumn: (SpStringTableColumn new
+				 title: 'Name';
+				 evaluated: [ :item | item at: #name ];
+				 yourself);
+		addColumn: (SpStringTableColumn new
+				 title: 'Confidence score';
+				 evaluated: [ :item | (item at: #confidence) asString ];
+				 yourself);
+		addColumn: (SpStringTableColumn new
+				 title: 'Level';
+				 evaluated: [ :item | item at: #level ];
+				 yourself);
+		beMultipleSelection.
+	toolsTable items: toolsData.
+
+	selectAllCheckbox := self newCheckBox.
+	selectAllCheckbox
+		label: 'Select all tools';
+		state: false;
+		whenChangedDo: [ :state | self onSelectAllChanged: state ].
+
+	changeScoreButton := self newButton.
+	changeScoreButton
+		label: 'Change score';
+		action: [ self changeScore ].
+
+	changeLevelButton := self newButton.
+	changeLevelButton
+		label: 'Change level';
+		action: [ self changeLevel ].
+
+	restoreDefaultButton := self newButton.
+	restoreDefaultButton
+		label: 'Restore to default';
+		action: [ self restoreToDefault ].
+
+	runButton := self newButton.
+	runButton
+		label: 'Run';
+		action: [ self runAnalysis ].
+
+	cancelButton := self newButton.
+	cancelButton
+		label: 'Cancel';
+		action: [ self delete ]
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> initializeToolsData [
+
+	toolsData := OrderedCollection new
+		               add: (Dictionary newFrom: {
+						                (#name -> 'AST Inferer').
+						                (#confidence -> 1.0).
+						                (#level -> 'high').
+						                (#selected -> true) });
+		               add: (Dictionary newFrom: {
+						                (#name -> 'TIT').
+						                (#confidence -> 0.8).
+						                (#level -> 'high').
+						                (#selected -> true) });
+		               add: (Dictionary newFrom: {
+						                (#name -> 'Offline Profiling').
+						                (#confidence -> 0.7).
+						                (#level -> 'medium').
+						                (#selected -> true) });
+		               add: (Dictionary newFrom: {
+						                (#name -> 'Name-based heuristics').
+						                (#confidence -> 0.6).
+						                (#level -> 'low').
+						                (#selected -> true) });
+		               yourself
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> initializeWindow: aWindowPresenter [
+
+	super initializeWindow: aWindowPresenter.
+	aWindowPresenter
+		title: 'Scope and Tools Configuration';
+		initialExtent: 600 @ 600
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> onSelectAllChanged: state [
+
+	state
+		ifTrue: [
+				toolsTable selectAll.]
+		ifFalse: [ toolsTable unselectAll ]
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> removeSelectedPackages [ 
+	
+	| selected current |
+	selected := selectedPackageList selection selectedItems.
+	current := selectedPackageList items asOrderedCollection.
+	
+	selected do: [ :pkg | current remove: pkg ifAbsent: [ ] ].
+	
+	selectedPackageList items: current
+
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> restoreToDefault [ 
+
+	self initializeToolsData.
+	self updateToolsTable
+
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> runAnalysis [ 
+	
+	| selectedPkgs selectedTools |
+	selectedPkgs := selectedPackageList items.
+	selectedTools := toolsData select: [ :tool | tool at: #selected ].
+	
+	selectedPkgs ifEmpty: [ ^ self inform: 'Please select at least one package' ].
+	selectedTools ifEmpty: [ ^ self inform: 'Please select at least one tool' ].
+	
+	"Perform your analysis here"
+	self inform: 'Running analysis on ', selectedPkgs size asString, ' package(s) with ', 
+		selectedTools size asString, ' tool(s)'.
+	
+	"Close the window after starting analysis"
+	self delete
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> updateToolsTable [ 
+	
+	toolsTable items: toolsData
+]

@@ -4,6 +4,9 @@ I store and manage all available type information, received from github reposito
 Class {
 	#name : 'Mycelium',
 	#superclass : 'Object',
+	#instVars : [
+		'localData'
+	],
 	#classInstVars : [
 		'defaultFolder',
 		'systemTypes',
@@ -18,6 +21,13 @@ Class {
 Mycelium class >> initialize [
 
 	defaultFolder := (IceRepository repositoryNamed: #mycelium) location fullName
+]
+
+{ #category : 'initialization' }
+Mycelium >> initialize [
+
+	super initialize.
+	localData := HyDataRepresentation new
 ]
 
 { #category : 'as yet unclassified' }

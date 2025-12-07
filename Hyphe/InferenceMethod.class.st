@@ -1,3 +1,6 @@
+"
+Stores inference tools names and their default and user-defined confidence numerical scores, e.g. ""Name-based Heuristics"" -> 0.6
+"
 Class {
 	#name : 'InferenceMethod',
 	#superclass : 'Object',

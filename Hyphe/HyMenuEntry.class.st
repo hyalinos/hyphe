@@ -1,6 +1,12 @@
+"
+A button in Browse menu to run Hyalinos UI
+"
 Class {
 	#name : 'HyMenuEntry',
 	#superclass : 'Object',
+	#classInstVars : [
+		'presenter'
+	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
 	#tag : 'UI'
@@ -31,8 +37,9 @@ HyMenuEntry class >> hyalinosIcon [
 
 { #category : 'world menu' }
 HyMenuEntry class >> initialize [
-   
-    self installKeymap.
+
+	"self installKeymap."
+	presenter := HyMainPresenter new
 ]
 
 { #category : 'world menu' }
@@ -48,9 +55,16 @@ HyMenuEntry class >> menuCommandOn: aBuilder [
 	<worldMenu>
 	(aBuilder item: #Hyalinos)
 		parent: #Testing;
-		action: [ HyMainPresenter new open ];
+		action: [ self openPresenter ];
 		order: 3;
 		keyText: 'o, h';
-		icon: (self hyalinosIcon);
+		icon: self hyalinosIcon;
 		withSeparatorAfter
+]
+
+{ #category : 'world menu' }
+HyMenuEntry class >> openPresenter [
+
+	presenter ifNil: [ presenter := HyMainPresenter new]. 
+	presenter open
 ]
