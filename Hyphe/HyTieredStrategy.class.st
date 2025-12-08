@@ -6,6 +6,12 @@ Class {
 	#tag : 'Merge'
 }
 
+{ #category : 'as yet unclassified' }
+HyTieredStrategy class >> prettyName [
+
+	^ 'Tiered Strategy'
+]
+
 { #category : 'initialization' }
 HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: nameHint [
     "Core tiered algorithm logic"

@@ -21,7 +21,11 @@ Class {
 		'restoreDefaultButton',
 		'runButton',
 		'cancelButton',
-		'toolsData'
+		'toolsData',
+		'strategyLabel',
+		'strategy',
+		'strategyDropList',
+		'restoreButton'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
@@ -40,6 +44,20 @@ HyInferencePresenter >> addSelectedPackages [
 	
 	selectedPackageList items: current
 
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> applyCurrentStrategy [
+
+	| current |
+	current := InferenceSettings mergeStrategy ifNil: [
+		           InferenceSettings defaultMergeStrategy ].
+
+	strategy := current.
+	strategyLabel label: 'Merge strategy: ' , current prettyName.
+
+	(strategyDropList items includes: current) ifTrue: [
+		strategyDropList selectItem: current ]
 ]
 
 { #category : 'initialization' }
@@ -76,9 +94,11 @@ HyInferencePresenter >> defaultLayout [
 						    add: #removeButton expand: false;
 						    add: #clearButton expand: false;
 						    yourself);
-				   add: selectedPackageList;	
+				   add: selectedPackageList;
 				   yourself);
-		  add: 'Select tools:' expand: false;			
+		  add: '     ' expand: false;
+		  add: '     ' expand: false;
+		  add: 'Select tools:' expand: false;
 		  add: toolsTable height: 150;
 		  add: selectAllCheckbox expand: false;
 		  add: (SpBoxLayout newHorizontal
@@ -87,14 +107,29 @@ HyInferencePresenter >> defaultLayout [
 				   add: restoreDefaultButton;
 				   yourself)
 		  expand: false;
-		  add: '' expand: false;	
-		  add: (SpBoxLayout newHorizontal
-					hAlignCenter;
+		  add: (SpBoxLayout newTopToBottom 
+				  add: '     ' expand: false;
+		        add: '     ' expand: false;
+		        add: #strategyLabel;
+		        add: '     ' expand: false;
+		        add: 'Choose other strategy     :' expand: false;
+		        add: (SpBoxLayout newLeftToRight
+				   add: #strategyDropList;
+				   add: #restoreButton;
+				   yourself)
+		  expand: false;
+				   yourself);
+		   add: (SpBoxLayout newTopToBottom
+		        add: '     ' expand: false;
+		        add: '     ' expand: false;
+		   		  add: (SpBoxLayout newHorizontal
+				   hAlignCenter;
+				   spacing: 10;
 				   add: runButton;
 				   add: cancelButton;
 				   yourself)
 		  expand: false;
-		  yourself
+		  yourself)
 ]
 
 { #category : 'initialization' }
@@ -196,12 +231,32 @@ HyInferencePresenter >> initializePresenters [
 	runButton := self newButton.
 	runButton
 		label: 'Run';
-		action: [ self runAnalysis ].
+		action: [ self runInference ].
 
 	cancelButton := self newButton.
 	cancelButton
 		label: 'Cancel';
-		action: [ self delete ]
+		action: [ self delete ].
+
+	strategyLabel := self newLabel.
+	strategyDropList := self newDropList.
+	restoreButton := self newButton.
+
+	"Configure the drop list with the strategies from the model"
+	strategyDropList
+		items: ((InferenceSettings mergeStrategies) collect: [:s | s prettyName ]);
+		whenSelectionChangedDo: [ :selection | 
+				| newStrategy |
+				newStrategy := selection selectedItem model.
+				newStrategy ifNotNil: [ self strategyChangedTo: newStrategy ] ].
+
+	"Configure the restore button"
+	restoreButton
+		label: 'Restore to default';
+		action: [ self restoreDefaultStrategy ].
+
+	"Initialize UI from model"
+	self applyCurrentStrategy
 ]
 
 { #category : 'initialization' }
@@ -216,7 +271,7 @@ HyInferencePresenter >> initializeWindow: aWindowPresenter [
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
 		title: 'Scope and Tools Configuration';
-		initialExtent: 600 @ 600
+		initialExtent: 550 @ 600
 ]
 
 { #category : 'initialization' }
@@ -242,6 +297,12 @@ HyInferencePresenter >> removeSelectedPackages [
 ]
 
 { #category : 'initialization' }
+HyInferencePresenter >> restoreDefaultStrategy [
+ 
+    self strategyChangedTo: InferenceSettings defaultMergeStrategy.
+]
+
+{ #category : 'initialization' }
 HyInferencePresenter >> restoreToDefault [ 
 
 	InferenceSettings restoreDefault.
@@ -251,9 +312,9 @@ HyInferencePresenter >> restoreToDefault [
 ]
 
 { #category : 'initialization' }
-HyInferencePresenter >> runAnalysis [
+HyInferencePresenter >> runInference [
 
-	| selectedPkgs selectedTools results p |
+	| selectedPkgs results |
 	selectedPkgs := selectedPackageList items.
 	selectedTools := (toolsTable selectedItems collect: [ :t | t at: 1 ])
 		                 collect: [ :t |
@@ -270,10 +331,22 @@ HyInferencePresenter >> runAnalysis [
 	results := (InferenceExecutor
 		            executeWithPackages: selectedPkgs
 		            tools: selectedTools
-		            mergeStrategy: HyWeightedVotingStrategy) flattened
-		           flatCollect: [ :d | d results ].
+		            mergeStrategy: strategy) flattened flatCollect: [ :d |
+		           d results ].
 	HyBrowseResults openWithData: results.
 	self delete
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> strategyChangedTo: aStrategy [
+
+	aStrategy isClass
+		ifTrue: [
+				strategyLabel label: 'Merge strategy: ' , aStrategy prettyName.
+				strategy = aStrategy]
+		ifFalse: [
+				strategy := InferenceSettings getStrategyByName: aStrategy.  
+				strategyLabel label: 'Merge strategy: ' , aStrategy ]
 ]
 
 { #category : 'initialization' }

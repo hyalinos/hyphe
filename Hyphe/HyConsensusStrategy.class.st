@@ -9,6 +9,12 @@ Class {
 	#tag : 'Merge'
 }
 
+{ #category : 'as yet unclassified' }
+HyConsensusStrategy class >> prettyName [ 
+
+	^ 'Consensus Strategy'
+]
+
 { #category : 'initialization' }
 HyConsensusStrategy >> initialize [
 

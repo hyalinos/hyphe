@@ -9,6 +9,12 @@ Class {
 	#tag : 'Merge'
 }
 
+{ #category : 'as yet unclassified' }
+HyMergeStrategy class >> prettyName [ 
+
+	self subclassResponsibility 
+]
+
 { #category : 'initialization' }
 HyMergeStrategy >> confidenceLevelFor: confidenceValue [ 
 	

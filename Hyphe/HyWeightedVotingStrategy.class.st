@@ -6,6 +6,12 @@ Class {
 	#tag : 'Merge'
 }
 
+{ #category : 'as yet unclassified' }
+HyWeightedVotingStrategy class >> prettyName [
+
+	^ 'Weighted Voting Strategy'
+]
+
 { #category : 'initialization' }
 HyWeightedVotingStrategy >> initialize [
 

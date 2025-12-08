@@ -16,14 +16,15 @@ Class {
 		'subscribedRepositories',
 		'toolNameToClass',
 		'defaultMergeStrategy',
-		'mergeStrategies'
+		'mergeStrategies',
+		'mergeStrategy'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
 	#tag : 'Inference'
 }
 
-{ #category : 'class initialization' }
+{ #category : 'confidence' }
 InferenceSettings class >> defaultConfidence [ 
 
 	^ Dictionary new 
@@ -33,13 +34,13 @@ InferenceSettings class >> defaultConfidence [
 		  yourself
 ]
 
-{ #category : 'class initialization' }
-InferenceSettings class >> defaultMergeStrategy [ 
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> defaultMergeStrategy [
 
-	^ defaultMergeStrategy
+	^ HyWeightedVotingStrategy
 ]
 
-{ #category : 'class initialization' }
+{ #category : 'tools' }
 InferenceSettings class >> defaultTools [ 
 
 	^ OrderedCollection new
@@ -50,51 +51,88 @@ InferenceSettings class >> defaultTools [
 		yourself
 ]
 
-{ #category : 'accessing' }
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> getStrategyByName: aStrategy [
+
+	|className prettyName|
+	className := self mergeStrategies select: [ :o | o name = aStrategy ].
+	className ifNotEmpty: [ ^ className first ].
+	prettyName := self mergeStrategies select: [ :o |
+		              o prettyName = aStrategy ].
+	prettyName ifNotEmpty: [ ^ prettyName first ]
+]
+
+{ #category : 'confidence' }
 InferenceSettings class >> inferenceConfidence [
 
 	^ inferenceConfidence
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'confidence' }
 InferenceSettings class >> inferenceConfidence: aConfidence [
 
 	inferenceConfidence := aConfidence 
 ]
 
-{ #category : 'accessing' }
+{ #category : 'tools' }
 InferenceSettings class >> inferenceTools [
 
 	^ inferenceTools
 ]
 
-{ #category : 'accessing' }
+{ #category : 'tools' }
 InferenceSettings class >> inferenceTools: data [
 
 	inferenceTools := data
 ]
 
 { #category : 'class initialization' }
-InferenceSettings class >> initialize [ 
+InferenceSettings class >> initialize [
 
 	inferenceConfidence := self defaultConfidence.
 	inferenceTools := self defaultTools.
+	mergeStrategy := defaultMergeStrategy.
 	self recalculate.
+	
 	subscribedRepositories := OrderedCollection new.
-	toolNameToClass := Dictionary new at: 'AST-based inference' put: TypeMeConfident;
-		at: 'Type Info Tools' put: TITMethodReturnTypesGatherer;
-		at: 'Name-based Heuristics' put: TypeMeNameBased; 
-		yourself. 
-		"at: 'Offline Test Profiling' put ."
-	defaultMergeStrategy := HyWeightedVotingStrategy.
-	mergeStrategies := Set withAll: {HyWeightedVotingStrategy . HyTieredStrategy . HyConsensusStrategy}.
-		
+	toolNameToClass := Dictionary new
+		                   at: 'AST-based inference' put: TypeMeConfident;
+		                   at: 'Type Info Tools'
+		                   put: TITMethodReturnTypesGatherer;
+		                   at: 'Name-based Heuristics' put: TypeMeNameBased;
+		                   yourself.
+	"at: 'Offline Test Profiling' put ."
 ]
 
 { #category : 'accessing' }
 InferenceSettings class >> joinData [
 
 	^ joinData
+]
+
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> mergeStrategies [
+
+	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy }
+]
+
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> mergeStrategy [
+
+	^ mergeStrategy
+]
+
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> mergeStrategy: anObject [
+
+	| className prettyName|
+	
+	(self mergeStrategies includes: anObject) ifTrue: [ mergeStrategy := anObject ].
+	className := self mergeStrategies select: [:o | o name = anObject ].
+	className ifNotEmpty: [ mergeStrategy := className first ].
+	prettyName := self mergeStrategies select: [:o | o prettyName = anObject ].
+	prettyName ifNotEmpty: [ mergeStrategy := prettyName first ].
+	 
 ]
 
 { #category : 'class initialization' }
@@ -113,7 +151,7 @@ InferenceSettings class >> recalculate [
 	^ joinData 
 ]
 
-{ #category : 'class initialization' }
+{ #category : 'confidence' }
 InferenceSettings class >> resolveConfidenceLevel: toolConfidence [ 
 
 	self inferenceConfidence keysAndValuesDo:[:level :range |
@@ -155,7 +193,7 @@ InferenceSettings class >> subscribedRepositories: aCollection [
 	subscribedRepositories := aCollection 
 ]
 
-{ #category : 'accessing' }
+{ #category : 'tools' }
 InferenceSettings class >> toolNameToClass [
 
 	^ toolNameToClass 
