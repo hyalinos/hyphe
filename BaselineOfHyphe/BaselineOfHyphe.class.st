@@ -14,8 +14,6 @@ BaselineOfHyphe >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
-			spec 
-				spec preLoadDoIt: #preload.
 				
 			spec 
 				baseline: 'TypeMe'
@@ -84,11 +82,4 @@ BaselineOfHyphe >> postload [
 	self initializeTypeStorage.
 	
 	
-]
-
-{ #category : 'baselines' }
-BaselineOfHyphe >> preload [
-	"create data folder in advance"
-	
-	HyDataDownloader dataFolder.
 ]
