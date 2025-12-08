@@ -12,7 +12,8 @@ Class {
 		'runButton',
 		'subscribeButton',
 		'viewButton',
-		'closeButton'
+		'closeButton',
+		'shareButton'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
@@ -33,6 +34,7 @@ HyMainPresenter >> defaultLayout [
 		  add: runButton;
 		  add: subscribeButton;
 		  add: viewButton;
+		  add: shareButton;
 		  add: closeButton;
 		  yourself
 ]
@@ -54,6 +56,11 @@ HyMainPresenter >> initializePresenters [
 		              label: 'View results';
 		              action: [ self viewResults ];
 		              yourself.
+		
+	shareButton := self newButton
+		               label: 'Share results';
+		               action: [ self shareResults ];
+		               yourself.	
 
 	closeButton := self newButton
 		               label: 'Close';
@@ -66,13 +73,19 @@ HyMainPresenter >> initializeWindow: aWindowPresenter [
 	
 	aWindowPresenter
 		title: 'Hyalinos';
-		initialExtent: 300@200
+		initialExtent: 300@250
 ]
 
 { #category : 'layout' }
 HyMainPresenter >> runInference [
 
 	HyInferencePresenter new open.
+]
+
+{ #category : 'layout' }
+HyMainPresenter >> shareResults [
+
+	
 ]
 
 { #category : 'layout' }

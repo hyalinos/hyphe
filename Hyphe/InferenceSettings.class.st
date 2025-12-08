@@ -17,12 +17,25 @@ Class {
 		'toolNameToClass',
 		'defaultMergeStrategy',
 		'mergeStrategies',
-		'mergeStrategy'
+		'mergeStrategy',
+		'monitorAllNewRepositories'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
 	#tag : 'Inference'
 }
+
+{ #category : 'adding' }
+InferenceSettings class >> addSubscribedRepositories: repoList [
+
+	subscribedRepositories addAll: repoList
+]
+
+{ #category : 'adding' }
+InferenceSettings class >> addSubscribedRepository: repo [
+
+	subscribedRepositories add: repo
+]
 
 { #category : 'confidence' }
 InferenceSettings class >> defaultConfidence [ 
@@ -38,6 +51,12 @@ InferenceSettings class >> defaultConfidence [
 InferenceSettings class >> defaultMergeStrategy [
 
 	^ HyWeightedVotingStrategy
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> defaultMergeStrategy: anObject [
+
+	defaultMergeStrategy := anObject
 ]
 
 { #category : 'tools' }
@@ -92,6 +111,7 @@ InferenceSettings class >> initialize [
 	inferenceConfidence := self defaultConfidence.
 	inferenceTools := self defaultTools.
 	mergeStrategy := defaultMergeStrategy.
+	monitorAllNewRepositories := false.
 	self recalculate.
 	
 	subscribedRepositories := OrderedCollection new.
@@ -110,10 +130,22 @@ InferenceSettings class >> joinData [
 	^ joinData
 ]
 
+{ #category : 'accessing' }
+InferenceSettings class >> joinData: anObject [
+
+	joinData := anObject
+]
+
 { #category : 'mergeStrategies' }
 InferenceSettings class >> mergeStrategies [
 
 	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy . HyBiasedConsensusStrategy . HyBiasedWeightedVotingStrategy}
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> mergeStrategies: anObject [
+
+	mergeStrategies := anObject
 ]
 
 { #category : 'mergeStrategies' }
@@ -133,6 +165,18 @@ InferenceSettings class >> mergeStrategy: anObject [
 	prettyName := self mergeStrategies select: [:o | o prettyName = anObject ].
 	prettyName ifNotEmpty: [ mergeStrategy := prettyName first ].
 	 
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> monitorAllNewRepositories [
+
+	^ monitorAllNewRepositories
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> monitorAllNewRepositories: anObject [
+
+	monitorAllNewRepositories := anObject
 ]
 
 { #category : 'class initialization' }
@@ -198,4 +242,10 @@ InferenceSettings class >> toolNameToClass [
 
 	^ toolNameToClass 
 		
+]
+
+{ #category : 'accessing' }
+InferenceSettings class >> toolNameToClass: anObject [
+
+	toolNameToClass := anObject
 ]

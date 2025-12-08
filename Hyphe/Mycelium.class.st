@@ -33,8 +33,8 @@ Mycelium class >> defaultFolder: anObject [
 Mycelium class >> initialize [
 
 	defaultFolder := FileLocator imageDirectory / 'data'.
-	systemTypes := HyDataRepresentation new.
-	libraryTypes :=HyDataRepresentation new.
+	systemTypes := Dictionary new.
+	libraryTypes :=Dictionary new.
 	
 	
 ]

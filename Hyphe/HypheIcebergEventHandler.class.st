@@ -4,23 +4,88 @@ Class {
 	#classVars : [
 		'Subscriptions'
 	],
+	#classInstVars : [
+		'subscribed',
+		'onNew'
+	],
 	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
 	#tag : 'Injection'
 }
 
+{ #category : 'subscribing' }
+HypheIcebergEventHandler class >> addRepositories: dict [
+
+	dict do: [:r | subscribed at: (r key) put: (r value) ].
+]
+
+{ #category : 'adding' }
+HypheIcebergEventHandler class >> generateBasicSettingsAndAdd: anIceLibgitRepository [ 
+
+	| config |
+	
+	config := Dictionary new.
+	config at: #onPull put: true.
+	config at: #onCommit put: true.
+	config at: #onPush put: true.
+	config at: #onPackageAdded put: true.
+	config at: #onPackageRemoved put: true.
+	
+	subscribed at: anIceLibgitRepository put: config.
+]
+
 { #category : 'initialization' }
 HypheIcebergEventHandler class >> initialize [
+
+	subscribed := Dictionary new.
+	onNew := false.
    self subscribe.
 
 	
+]
+
+{ #category : 'testing' }
+HypheIcebergEventHandler class >> isObservedRepository: aReposir [
+	
+	^ subscribed contains: (aReposir key)
+]
+
+{ #category : 'subscribing' }
+HypheIcebergEventHandler class >> monitorAllNewRepositories [
+
+	onNew := true.
+]
+
+{ #category : 'accessing' }
+HypheIcebergEventHandler class >> onNew [
+
+	^ onNew
+]
+
+{ #category : 'accessing' }
+HypheIcebergEventHandler class >> onNew: anObject [
+
+	onNew := anObject
+]
+
+{ #category : 'as yet unclassified' }
+HypheIcebergEventHandler class >> onPackageLoaded: ann [ 
+	
+self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages
+]
+
+{ #category : 'as yet unclassified' }
+HypheIcebergEventHandler class >> onPackageUnloaded: ann [
+
+	
+self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages
 ]
 
 { #category : 'event handlers' }
 HypheIcebergEventHandler class >> onRepositoryChange: anIceLibGitRepository packages: anArrayOfIcePackage loadedPackages: anArrayOfIcePackageLoaded [
 	"anArrayOfIcePackage contains all the packages (IcePackage) in the repository. 
 	anArrayOfIcePackageLoaded contains only the packages (IcePackage) loaded after the repository change"
-"Example code"	
+
 Transcript showCr: '[Hyphe] Repository change ', anIceLibGitRepository name.
 Transcript show: '[Hyphe] Repository packages: '.
         anArrayOfIcePackage isEmpty 
@@ -38,6 +103,20 @@ Transcript show: '[Hyphe] Repository packages loaded: '.
                     Transcript show: pkg name ]
                     separatedBy: [ Transcript show: ', ' ] ].
         Transcript cr.
+]
+
+{ #category : 'event handlers' }
+HypheIcebergEventHandler class >> onRepositoryCommited: ann [
+
+	| repo results|
+	
+	self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages.
+	repo := ann repository.
+	((subscribed at: repo ifAbsent: [ ]) at: #onCommit) ifTrue: [
+		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
+		Mycelium libraryTypes: results.
+		].
+	
 ]
 
 { #category : 'event handlers' }
@@ -60,6 +139,11 @@ ann repository ifNotNil: [
                     Transcript show: pkg name ]
                     separatedBy: [ Transcript show: ', ' ] ].
         Transcript cr ]"
+
+
+InferenceSettings addSubscribedRepository: (ann repository).
+self generateBasicSettingsAndAdd: (ann repository).
+
 self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
 ]
 
@@ -83,52 +167,44 @@ ann repository ifNotNil: [
                     Transcript show: pkg name ]
                     separatedBy: [ Transcript show: ', ' ] ].
         Transcript cr ]"
+
+subscribed removeKey: (ann repository) ifAbsent: [  ].
+InferenceSettings subscribedRepositories remove: (ann repository).
+
 self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
 ]
 
 { #category : 'event handlers' }
 HypheIcebergEventHandler class >> onRepositoryModified: ann [
-"ann -> is a IceRepositoryModified
-ann repository -> is a IceLibGitRepository
-ann repository loadedPackages -> an Array of IcePackage
-
-"
-   " Transcript 
-        show: '[Hyphe] Repository modified: ', (ann repository ifNotNil: #name ifNil: ['(unknown)']);
-        cr.
-    ann repository ifNotNil: [
-        | loadedPkgs |
-        loadedPkgs := ann repository loadedPackages.
-        Transcript show: '[Hyphe] Loaded packages: '.
-        loadedPkgs isEmpty 
-            ifTrue: [ Transcript show: '(none)' ]
-            ifFalse: [
-                loadedPkgs do: [ :pkg | 
-                    Transcript show: pkg name ]
-                    separatedBy: [ Transcript show: ', ' ] ].
-        Transcript cr ]"
+	
 self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
+
 ]
 
 { #category : 'event handlers' }
 HypheIcebergEventHandler class >> onRepositoryPushed: ann [
-"
-    Transcript 
-        show: '[Hyphe] Repository pushed: ', ann repository name;
-        cr.
 
-ann repository ifNotNil: [
-        | loadedPkgs |
-        loadedPkgs := ann repository loadedPackages.
-        Transcript show: '[Hyphe] Loaded packages: '.
-        loadedPkgs isEmpty 
-            ifTrue: [ Transcript show: '(none)' ]
-            ifFalse: [
-                loadedPkgs do: [ :pkg | 
-                    Transcript show: pkg name ]
-                    separatedBy: [ Transcript show: ', ' ] ].
-        Transcript cr ]"
-self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
+	| repo results|
+
+	self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages.
+	
+	repo := ann repository.
+	((subscribed at: repo ifAbsent: [ ]) at: #onPush) ifTrue: [ 
+		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
+		Mycelium libraryTypes: results.
+	]. 
+]
+
+{ #category : 'subscribing' }
+HypheIcebergEventHandler class >> removeRepositories: repos [
+
+	repos do: [:r | subscribed removeKey: r ifAbsent: [ nil ]] 
+]
+
+{ #category : 'event handlers' }
+HypheIcebergEventHandler class >> runInference: packages [
+
+	
 ]
 
 { #category : 'subscribing' }
@@ -151,11 +227,38 @@ HypheIcebergEventHandler class >> subscribe [
         when: IceRepositoryModified
         send: #onRepositoryModified:
         to: self).
+
+	Subscriptions add: (Iceberg announcer weak
+        when: IceCommited 
+        send: #onRepositoryCommited:
+        to: self).
+
+	Subscriptions add: (Iceberg announcer weak
+        when: IcePushed 
+        send: #onRepositoryPushed:
+        to: self).
     
     Subscriptions add: (Iceberg announcer weak
-        when: IcePushed
-        send: #onRepositoryPushed:
-        to: self)
+        when: IcePackageLoaded 
+        send: #onPackageLoaded:
+        to: self).
+
+	Subscriptions add: (Iceberg announcer weak
+        when: IcePackageUnloaded 
+        send: #onPackageUnloaded:
+        to: self).
+]
+
+{ #category : 'accessing' }
+HypheIcebergEventHandler class >> subscribed [
+
+	^ subscribed
+]
+
+{ #category : 'accessing' }
+HypheIcebergEventHandler class >> subscribed: anObject [
+
+	subscribed := anObject
 ]
 
 { #category : 'subscribing' }
