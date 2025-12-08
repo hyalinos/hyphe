@@ -113,7 +113,7 @@ InferenceSettings class >> joinData [
 { #category : 'mergeStrategies' }
 InferenceSettings class >> mergeStrategies [
 
-	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy . HyBiasedConsensusStrategy }
+	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy . HyBiasedConsensusStrategy . HyBiasedWeightedVotingStrategy}
 ]
 
 { #category : 'mergeStrategies' }
