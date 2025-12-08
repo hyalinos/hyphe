@@ -20,7 +20,7 @@ BaselineOfHyphe >> baseline: spec [
 					with: [ spec repository: 'github://lsafina/typeMe:main' ];
     			baseline: 'MethodProxies' 
    	 				with: [ spec repository: 'github://pharo-contributions/MethodProxies/src' ];
-				baseline: 'Hyphe-Tools' 
+				baseline: 'HypheTools' 
    	 				with: [ spec repository: 'github://hyalinos/hyphe-tools:main/src' ];
 				baseline: 'TypeInfoTools'
 					with: [ spec repository: 'github://lsafina/TypeInfoTools:main' ].
