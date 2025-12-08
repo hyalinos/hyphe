@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'strategy',
-		'hyData'
+		'hyData',
+		'results'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -130,6 +131,12 @@ HyTypeMerger >> hyData: anObject [
 ]
 
 { #category : 'as yet unclassified' }
+HyTypeMerger >> initialize [
+
+	results := OrderedCollection new
+]
+
+{ #category : 'as yet unclassified' }
 HyTypeMerger >> labelForConfidence: conf [
     conf >= 0.95 ifTrue: [ ^ 'certain' ].
     conf >= 0.85 ifTrue: [ ^ 'very likely' ].
@@ -142,71 +149,67 @@ HyTypeMerger >> labelForConfidence: conf [
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeForObject: anObject withTypes: typesCollection [
-    "Apply strategy to aggregate types and set confidence"
-    | result |
-    
-    typesCollection ifEmpty: [ 
-        anObject confidence: 0.0.
-        ^ self ].
-    
-    result := strategy mergeTypes: typesCollection.
-    anObject confidence: (result at: #confidence)
 
+
+	typesCollection ifEmpty: [
+			anObject confidence: 0.0.
+			^ self ].
+
+	^ strategy new mergeTypes: typesCollection
 ]
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeHyTypes: aHyDataRepresentation [
-    "Process entire HyDataRepresentation and set confidence"
-    hyData := aHyDataRepresentation.
-    
-    hyData packages do: [ :package |
-        package classes do: [ :class |
-            class variables do: [ :variable |
-        			self mergeForObject: variable withTypes: variable types ].
-        class methods do: [ :method | self mergeMethodTypes: method ]. 
-		] 
-	]
 
+	hyData := aHyDataRepresentation.
+
+	hyData packages do: [ :package |
+			package classes do: [ :class | " class variables do: [ :variable |
+        			self mergeForObject: variable withTypes: variable types ]."
+					class methods do: [ :method |
+						self mergeMethodTypes: method class: class package: package ] ] ]
 ]
 
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeMethodTypes: aHyMethod [
-    "Aggregate types for method"
+ 
     aHyMethod returnTypes ifNotEmpty: [
         self mergeForObject: aHyMethod withTypes: aHyMethod returnTypes ].
     
-    aHyMethod parameters do: [ :param |
-        self mergeForObject: param withTypes: param types ]
+    "aHyMethod parameters do: [ :param |
+        self mergeForObject: param withTypes: param types ]"
 ]
 
 { #category : 'as yet unclassified' }
-HyTypeMerger >> printMethodReturnType: methodName inClass: className package: packageName [
-    "Print return type information for a method"
-    | info |
-    info := self findMethodReturnType: methodName inClass: className package: packageName.
-    
-    info ifNil: [
-        Transcript 
-            cr; show: 'Method not found: ', packageName, '>>', className, '>>', methodName; cr.
-        ^ self ].
-    
-    Transcript cr.
-    Transcript show: 'Package: ', packageName; cr.
-    Transcript show: 'Class: ', className; cr.
-    Transcript show: 'Method: ', methodName; cr.
-    Transcript show: 'Return Type(s): '.
-    (info at: #types) 
-        do: [ :type | Transcript show: type ]
-        separatedBy: [ Transcript show: ', ' ].
-    Transcript cr.
-    Transcript show: 'Confidence: ', ((info at: #confidence) * 100) rounded asString, '%'; cr.
-    Transcript show: 'Label: ', (info at: #label); cr.
-    Transcript show: 'Sources: '.
-    (info at: #sources) 
-        do: [ :source | Transcript show: source ]
-        separatedBy: [ Transcript show: ', ' ].
-    Transcript cr.
-    Transcript show: 'Reasoning: ', (info at: #reasoning); cr
+HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
+
+	| result |
+	result := aMethod returnTypes ifNotEmpty: [
+		          self
+			          mergeForObject: aMethod
+			          withTypes: aMethod returnTypes ].
+
+	aMethod
+		returnTypeConfidence: (result at: #confidence);
+		selectedReturnType: (result at: #types).
+
+	results add: (Dictionary new
+			 at: #packageName put: aPackage name;
+			 at: #className put: aClass name;
+			 at: #methodName put: aMethod name;
+			 at: #type put: (result at: #types);
+			 at: #confidence put: (result at: #confidence);
+			 at: #level
+			 put:
+				 (InferenceSettings resolveConfidenceLevel:
+						  (result at: #confidence));
+			 at: #sources put: (result at: #sources);
+			 at: #reasoning put: (result at: #reasoning);
+			 yourself).
+
+
+	"aHyMethod parameters do: [ :param |
+        self mergeForObject: param withTypes: param types ]"
 ]
 
 { #category : 'as yet unclassified' }
@@ -247,6 +250,12 @@ HyTypeMerger >> reasoningForMethod: aHyMethod [
     | result |
     result := strategy mergeTypes: aHyMethod returnTypes.
     ^ result at: #reasoning ifAbsent: [ 'No reasoning available' ]
+]
+
+{ #category : 'accessing' }
+HyTypeMerger >> results [
+
+	^ results 
 ]
 
 { #category : 'accessing' }

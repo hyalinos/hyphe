@@ -1,6 +1,6 @@
 Class {
 	#name : 'OfflineProfilerResultsExporter',
-	#superclass : 'InferenceResultsExporter',
+	#superclass : 'TypeMeResultsExporter',
 	#category : 'Hyphe-Export',
 	#package : 'Hyphe',
 	#tag : 'Export'

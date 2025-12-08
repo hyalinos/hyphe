@@ -10,7 +10,8 @@ Class {
 		'saveButton',
 		'resetButton',
 		'cancelButton',
-		'originalData'
+		'originalData',
+		'parentTable'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
@@ -18,17 +19,16 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-HyToolsConfidencePresenter class >> openWithData: aCollection [
+HyToolsConfidencePresenter class >> openWithData: aTable [
 
 	^ self new
-		toolsData: aCollection;
+		parentTable: aTable;
 		open
 ]
 
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> cancel [
 
-	"Cancel and close the window"
 	self window close
 ]
 
@@ -47,23 +47,28 @@ HyToolsConfidencePresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
-HyToolsConfidencePresenter >> initializePresenters [
+HyToolsConfidencePresenter >> initialize [
 
-	toolsData := OrderedCollection new.
-	originalData := OrderedCollection new.
+	super initialize.
+	toolsData := InferenceSettings inferenceTools.
+	originalData := InferenceSettings inferenceTools.
+	table items: toolsData. 
+]
+
+{ #category : 'initialization' }
+HyToolsConfidencePresenter >> initializePresenters [
 	
 	table := self newTable.
 	table
 		addColumn: (SpStringTableColumn 
 			title: 'Tool Name'
-			evaluated: [ :item | item at: #name ]);
+			evaluated: [ :item | item first ]);
 		addColumn: (SpStringTableColumn 
 			title: 'Confidence Score'
-			evaluated: [ :item | (item at: #confidence) asString ])
+			evaluated: [ :item | (item last) asString ])
 			beSortable;
 		beResizable.
 	
-	"Make the confidence score column editable"
 	table columns second onAcceptEdition: [ :item :newValue |
 		self updateConfidenceScore: item with: newValue ].
 	table columns second beEditable.
@@ -93,11 +98,15 @@ HyToolsConfidencePresenter >> initializeWindow: aWindowPresenter [
 ]
 
 { #category : 'initialization' }
+HyToolsConfidencePresenter >> parentTable: aTable [
+
+	parentTable := aTable 
+]
+
+{ #category : 'initialization' }
 HyToolsConfidencePresenter >> reset [
 
-	"Reset to the original data"
-	toolsData := originalData collect: [ :item | item copy ] as: OrderedCollection.
-	table items: toolsData.
+	table items: (originalData collect: [ :item | item copy ] as: OrderedCollection).
 	self inform: 'Data reset to original values.'
 
 ]
@@ -105,29 +114,24 @@ HyToolsConfidencePresenter >> reset [
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> save [
 
-	"Save the current data - update originalData to match current state"
-	originalData := toolsData collect: [ :item | item copy ] as: OrderedCollection.
+	InferenceSettings inferenceTools: (toolsData collect: [ :item | item copy ] as: OrderedCollection). 
+	InferenceSettings recalculate.
+	parentTable items: InferenceSettings joinData. 
 	self inform: 'Data saved successfully!'
 ]
 
-{ #category : 'initialization' }
-HyToolsConfidencePresenter >> toolsData: aCollection [
-
-	toolsData := aCollection asOrderedCollection.
-	originalData := aCollection collect: [ :item | item copy ] as: OrderedCollection.
-	table items: toolsData
-
+{ #category : 'accessing' }
+HyToolsConfidencePresenter >> toolsData: aCollection [ 
+	toolsData := aCollection
 ]
 
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> updateConfidenceScore: item with: newValue [
 
-	[ 
-		| numericValue |
-		numericValue := newValue asNumber.
-		item at: #confidence put: numericValue.
-		table refresh
-	] on: Error do: [ 
-		self inform: 'Invalid confidence score. Please enter a numeric value.'
-	]
+[ 
+	item at: 2 put: (newValue asNumber).
+	table refresh
+] on: Error do: [ 
+	self inform: 'Invalid confidence score. Please enter a numeric value.'
+]
 ]

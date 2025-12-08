@@ -9,23 +9,22 @@ Class {
 { #category : 'as yet unclassified' }
 HyDataDownloader class >> dataFolder [
     | folder |
-    folder := FileLocator imageDirectory / 'Data'.
+    folder := FileLocator imageDirectory / 'data'.
     folder asFileReference ensureCreateDirectory .
     ^ folder
 ]
 
 { #category : 'as yet unclassified' }
 HyDataDownloader class >> downloadFile: url saveWithName: filename [
-"returns the downloaded file reference"
-    | contents |
-    
-        contents := ZnClient new
-            get: url;
-            contents.
-			
-        (self dataFolder / filename) writeStreamDo: [:stream |
-            stream nextPutAll: contents ].
-^ (self dataFolder / filename) asFileReference 
 
+    | targetFile response|
+    targetFile := self dataFolder / filename.
     
+    response := ZnClient new
+        url: url;
+        streaming: true;
+        downloadTo: targetFile;
+	response.
+    
+    ^ response isSuccess
 ]

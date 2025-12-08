@@ -45,19 +45,13 @@ HyInferencePresenter >> addSelectedPackages [
 { #category : 'initialization' }
 HyInferencePresenter >> changeLevel [
 	
-	HyConfidenceLevelPresenter openWithData: ({ 
-		Dictionary newFrom: { #min -> 0.0. #max -> 0.3. #level -> 'Low' }.
-		Dictionary newFrom: { #min -> 0.3. #max -> 0.7. #level -> 'Medium' }.
-		Dictionary newFrom: { #min -> 0.7. #max -> 1.0. #level -> 'High' }
-	})
-
-	
+	HyConfidenceLevelPresenter openWithData: toolsTable
 ]
 
 { #category : 'initialization' }
 HyInferencePresenter >> changeScore [
 
-	HyToolsConfidencePresenter openWithData: toolsData 
+	HyToolsConfidencePresenter openWithData: toolsTable.
 ]
 
 { #category : 'initialization' }
@@ -104,6 +98,19 @@ HyInferencePresenter >> defaultLayout [
 ]
 
 { #category : 'initialization' }
+HyInferencePresenter >> disableAllToolsSelected [
+
+	toolsTable unselectAll
+]
+
+{ #category : 'initialization' }
+HyInferencePresenter >> enableAllToolsSelected [
+
+	toolsTable selectAll.
+
+]
+
+{ #category : 'initialization' }
 HyInferencePresenter >> getAllPackages [
 
 	^ PackageOrganizer default packages
@@ -113,7 +120,7 @@ HyInferencePresenter >> getAllPackages [
 HyInferencePresenter >> initialize [
 
 	super initialize.
-	self initializeToolsData.
+	self initializeToolsData. 
 	self updateToolsTable.
 ]
 
@@ -150,15 +157,15 @@ HyInferencePresenter >> initializePresenters [
 	toolsTable
 		addColumn: (SpStringTableColumn new
 				 title: 'Name';
-				 evaluated: [ :item | item at: #name ];
+				 evaluated: [ :item | item at: 1 ];
 				 yourself);
 		addColumn: (SpStringTableColumn new
 				 title: 'Confidence score';
-				 evaluated: [ :item | (item at: #confidence) asString ];
+				 evaluated: [ :item | (item at: 2) asString ];
 				 yourself);
 		addColumn: (SpStringTableColumn new
 				 title: 'Level';
-				 evaluated: [ :item | item at: #level ];
+				 evaluated: [ :item | item at: 3 ];
 				 yourself);
 		beMultipleSelection.
 	toolsTable items: toolsData.
@@ -167,7 +174,9 @@ HyInferencePresenter >> initializePresenters [
 	selectAllCheckbox
 		label: 'Select all tools';
 		state: false;
-		whenChangedDo: [ :state | self onSelectAllChanged: state ].
+		whenActivatedDo: [ self enableAllToolsSelected ];
+		whenDeactivatedDo: [ self disableAllToolsSelected ].
+
 
 	changeScoreButton := self newButton.
 	changeScoreButton
@@ -196,30 +205,9 @@ HyInferencePresenter >> initializePresenters [
 ]
 
 { #category : 'initialization' }
-HyInferencePresenter >> initializeToolsData [
+HyInferencePresenter >> initializeToolsData [ 
 
-	toolsData := OrderedCollection new
-		               add: (Dictionary newFrom: {
-						                (#name -> 'AST Inferer').
-						                (#confidence -> 1.0).
-						                (#level -> 'high').
-						                (#selected -> true) });
-		               add: (Dictionary newFrom: {
-						                (#name -> 'TIT').
-						                (#confidence -> 0.8).
-						                (#level -> 'high').
-						                (#selected -> true) });
-		               add: (Dictionary newFrom: {
-						                (#name -> 'Offline Profiling').
-						                (#confidence -> 0.7).
-						                (#level -> 'medium').
-						                (#selected -> true) });
-		               add: (Dictionary newFrom: {
-						                (#name -> 'Name-based heuristics').
-						                (#confidence -> 0.6).
-						                (#level -> 'low').
-						                (#selected -> true) });
-		               yourself
+	toolsData := InferenceSettings joinData.
 ]
 
 { #category : 'initialization' }
@@ -256,26 +244,35 @@ HyInferencePresenter >> removeSelectedPackages [
 { #category : 'initialization' }
 HyInferencePresenter >> restoreToDefault [ 
 
+	InferenceSettings restoreDefault.
 	self initializeToolsData.
 	self updateToolsTable
 
 ]
 
 { #category : 'initialization' }
-HyInferencePresenter >> runAnalysis [ 
-	
-	| selectedPkgs selectedTools |
+HyInferencePresenter >> runAnalysis [
+
+	| selectedPkgs selectedTools results p |
 	selectedPkgs := selectedPackageList items.
-	selectedTools := toolsData select: [ :tool | tool at: #selected ].
-	
-	selectedPkgs ifEmpty: [ ^ self inform: 'Please select at least one package' ].
-	selectedTools ifEmpty: [ ^ self inform: 'Please select at least one tool' ].
-	
-	"Perform your analysis here"
-	self inform: 'Running analysis on ', selectedPkgs size asString, ' package(s) with ', 
-		selectedTools size asString, ' tool(s)'.
-	
-	"Close the window after starting analysis"
+	selectedTools := (toolsTable selectedItems collect: [ :t | t at: 1 ])
+		                 collect: [ :t |
+		                 InferenceSettings toolNameToClass at: t ].
+
+	selectedPkgs ifEmpty: [
+		^ self inform: 'Please select at least one package' ].
+	selectedTools ifEmpty: [
+		^ self inform: 'Please select at least one tool' ].
+
+	self inform: 'Running analysis on ' , selectedPkgs size asString
+		, ' package(s) with ' , selectedTools size asString , ' tool(s)'.
+
+	results := (InferenceExecutor
+		            executeWithPackages: selectedPkgs
+		            tools: selectedTools
+		            mergeStrategy: HyWeightedVotingStrategy) flattened
+		           flatCollect: [ :d | d results ].
+	HyBrowseResults openWithData: results.
 	self delete
 ]
 

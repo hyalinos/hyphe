@@ -2,7 +2,7 @@ Class {
 	#name : 'HyMergeStrategy',
 	#superclass : 'Object',
 	#instVars : [
-		'sourceCategories'
+		'mergeResults'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -10,10 +10,40 @@ Class {
 }
 
 { #category : 'initialization' }
-HyMergeStrategy >> categoryForSource: sourceName [
-    "Get category for a source"
+HyMergeStrategy >> confidenceLevelFor: confidenceValue [ 
+	
+	^ InferenceSettings resolveConfidenceLevel: confidenceValue.	
+	
+]
 
-    ^ sourceCategories at: sourceName ifAbsent: [ 'unknown' ]
+{ #category : 'initialization' }
+HyMergeStrategy >> createMergeResult: selectedType
+confidence: confidenceValue
+confidenceLevel: levelString
+agreingSources: sourcesList
+reasoning: reasoningString
+forMethod: methodName
+inClass: className
+inPackage: packageName
+inRepository: repositoryName [ 
+
+^ Dictionary new
+at: #repositoryName put: repositoryName;
+at: #packageName put: packageName;
+at: #className put: className;
+at: #methodName put: methodName;
+at: #type put: selectedType;
+at: #confidence put: confidenceValue;
+at: #confidenceLevel put: levelString;
+at: #agreingSources put: sourcesList;
+at: #reasoning put: reasoningString;
+yourself
+]
+
+{ #category : 'initialization' }
+HyMergeStrategy >> findAgreeingSourcesFor: selectedType in: typesCollection [ 
+
+	^ (typesCollection select: [ :hyType | hyType name = selectedType ]) collect: [ :hyType | hyType source ]
 ]
 
 { #category : 'initialization' }
@@ -39,51 +69,18 @@ HyMergeStrategy >> groupTypesByCategory: typesCollection [
 { #category : 'initialization' }
 HyMergeStrategy >> initialize [
     super initialize.
-    self initializeSourceCategories
-]
-
-{ #category : 'initialization' }
-HyMergeStrategy >> initializeSourceCategories [
-
-    sourceCategories := Dictionary new
-        "Structural analysis - provably correct"
-        at: 'StructuralAnalyzer' put: 'structural';
-        at: 'FlowAnalysis' put: 'structural';
-        at: 'ReturnAnalyzer' put: 'structural';
-        
-        "Usage analysis - observed at runtime"
-        at: 'JInferer' put: 'usage';
-        at: 'RoelTyper' put: 'usage';
-        at: 'RuntimeProfiler' put: 'usage';
-        at: 'TypeMe' put: 'usage';
-        
-        "Name-based heuristics"
-        at: 'NameAnalyzer' put: 'nameHeuristic';
-        at: 'TypeHintAnalyzer' put: 'nameHeuristic';
-        
-        "Static analysis - intermediate reliability"
-        at: 'StaticAnalyzer' put: 'static';
-        at: 'TypeChecker' put: 'static';
-        
-        "LLM-based - lower reliability"
-        at: 'LLM-Mistral' put: 'llm';
-        at: 'GPT-4' put: 'llm';
-        yourself
 ]
 
 { #category : 'initialization' }
 HyMergeStrategy >> mergeTypes: typesCollection [
-    "Template method - subclasses implement specific logic
-    Returns Dictionary with #confidence, #label, #reasoning"
 
     self subclassResponsibility
 ]
 
 { #category : 'initialization' }
-HyMergeStrategy >> setCategory: categoryName forSource: sourceName [
-    "Set category for a source"
+HyMergeStrategy >> mergeTypes: typesCollection forMethod: methodName inClass: className inPackage: packageName inRepository: repositoryName [
 
-    sourceCategories at: sourceName put: categoryName
+	self subclassResponsibility
 ]
 
 { #category : 'initialization' }
@@ -91,4 +88,12 @@ HyMergeStrategy >> strategyName [
     "Return name of this strategy for reporting"
 
     self subclassResponsibility
+]
+
+{ #category : 'as yet unclassified' }
+HyMergeStrategy >> updateMethod: aMethod withType: selectedType confidence: confidenceValue [
+
+	aMethod
+		selectedType: selectedType
+		returnTypeConfidence: confidenceValue
 ]

@@ -1,5 +1,5 @@
 Class {
-	#name : 'TITResultsExporter',
+	#name : 'TypeMeNameBasedResultsExporter',
 	#superclass : 'TypeMeResultsExporter',
 	#category : 'Hyphe-Export',
 	#package : 'Hyphe',
@@ -7,8 +7,8 @@ Class {
 }
 
 { #category : 'initialization' }
-TITResultsExporter >> initialize [
+TypeMeNameBasedResultsExporter >> initialize [ 
 
-    super initialize.
-    defaultSource := 'Type Info Tools'.
+	super initialize.
+	defaultSource := #TypeMeNameBased
 ]
