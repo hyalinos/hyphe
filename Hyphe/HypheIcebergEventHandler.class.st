@@ -112,7 +112,7 @@ HypheIcebergEventHandler class >> onRepositoryCommited: ann [
 	
 	self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages.
 	repo := ann repository.
-	((subscribed at: repo ifAbsent: [ ]) at: #onCommit) ifTrue: [
+	((subscribed at: repo ifAbsent: [^ false ]) at: #onCommit) ifTrue: [
 		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
 		Mycelium libraryTypes: results.
 		].
