@@ -2,8 +2,7 @@ Class {
 	#name : 'HyConsensusStrategy',
 	#superclass : 'HyMergeStrategy',
 	#instVars : [
-		'minimumSources',
-		'toolConfidenceMap'
+		'minimumSources'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -78,20 +77,6 @@ HyConsensusStrategy >> extractSourceNames: hyTypes [
 ]
 
 { #category : 'as yet unclassified' }
-HyConsensusStrategy >> extractToolConfidence: hyType [
-     
-   ^ toolConfidenceMap at: (hyType source) ifAbsent: [ 0.5 ].
-    
-]
-
-{ #category : 'as yet unclassified' }
-HyConsensusStrategy >> extractToolConfidences: hyTypes [
-      
-    ^ hyTypes collect: [ :hyType | self extractToolConfidence: hyType].
-   
-]
-
-{ #category : 'as yet unclassified' }
 HyConsensusStrategy >> getSourcesForType: typeName inCollection: typesCollection [
     
     | sources |
@@ -104,25 +89,6 @@ HyConsensusStrategy >> getSourcesForType: typeName inCollection: typesCollection
     ].
     
     ^ sources
-]
-
-{ #category : 'as yet unclassified' }
-HyConsensusStrategy >> getToolConfidenceMap [
-   "map tool className confidence"
-    
-    | mapping |
-    mapping := Dictionary new.
-    
-    InferenceSettings inferenceTools do: [ :pair |
-        | toolName confidenceString confidenceFloat |
-
-        toolName := (InferenceSettings toolNameToClass at: (pair first)) name.
-        confidenceString := pair second.
-        confidenceFloat := confidenceString asNumber.
-        mapping at: toolName put: confidenceFloat.
-    ].
-    
-    toolConfidenceMap := mapping
 ]
 
 { #category : 'as yet unclassified' }
@@ -148,15 +114,6 @@ HyConsensusStrategy >> initialize [
     super initialize.
     minimumSources := 2.
 	 self getToolConfidenceMap.
-]
-
-{ #category : 'initialization' }
-HyConsensusStrategy >> labelForConfidence: conf [
-
-    conf >= 0.9 ifTrue: [ ^ 'certain' ].
-    conf >= 0.7 ifTrue: [ ^ 'likely' ].
-    conf >= 0.5 ifTrue: [ ^ 'probable' ].
-    ^ 'uncertain'
 ]
 
 { #category : 'initialization' }
@@ -220,10 +177,4 @@ HyConsensusStrategy >> selectBestTypeFrom: votingResults [
 HyConsensusStrategy >> strategyName [
 
     ^ 'Consensus'
-]
-
-{ #category : 'accessing' }
-HyConsensusStrategy >> toolConfidenceMap [
-
-	^ toolConfidenceMap
 ]

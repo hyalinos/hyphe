@@ -3,7 +3,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'mergeResults',
-		'tools'
+		'tools',
+		'toolConfidenceMap'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -23,28 +24,18 @@ HyMergeStrategy >> confidenceLevelFor: confidenceValue [
 	
 ]
 
-{ #category : 'initialization' }
-HyMergeStrategy >> createMergeResult: selectedType
-confidence: confidenceValue
-confidenceLevel: levelString
-agreingSources: sourcesList
-reasoning: reasoningString
-forMethod: methodName
-inClass: className
-inPackage: packageName
-inRepository: repositoryName [ 
+{ #category : 'as yet unclassified' }
+HyMergeStrategy >> extractToolConfidence: hyType [
+     
+   ^ toolConfidenceMap at: (hyType source) ifAbsent: [ 0.5 ].
+    
+]
 
-^ Dictionary new
-at: #repositoryName put: repositoryName;
-at: #packageName put: packageName;
-at: #className put: className;
-at: #methodName put: methodName;
-at: #type put: selectedType;
-at: #confidence put: confidenceValue;
-at: #confidenceLevel put: levelString;
-at: #agreingSources put: sourcesList;
-at: #reasoning put: reasoningString;
-yourself
+{ #category : 'as yet unclassified' }
+HyMergeStrategy >> extractToolConfidences: hyTypes [
+      
+    ^ hyTypes collect: [ :hyType | self extractToolConfidence: hyType].
+   
 ]
 
 { #category : 'initialization' }
@@ -53,24 +44,23 @@ HyMergeStrategy >> findAgreeingSourcesFor: selectedType in: typesCollection [
 	^ (typesCollection select: [ :hyType | hyType name = selectedType ]) collect: [ :hyType | hyType source ]
 ]
 
-{ #category : 'initialization' }
-HyMergeStrategy >> groupTypesByCategory: typesCollection [
-    "Group HyType objects by their source category"
+{ #category : 'as yet unclassified' }
+HyMergeStrategy >> getToolConfidenceMap [
+   "map tool className confidence"
+    
+    | mapping |
+    mapping := Dictionary new.
+    
+    InferenceSettings inferenceTools do: [ :pair |
+        | toolName confidenceString confidenceFloat |
 
-    | grouped |
-    grouped := Dictionary new.
+        toolName := (InferenceSettings toolNameToClass at: (pair first)) name.
+        confidenceString := pair second.
+        confidenceFloat := confidenceString asNumber.
+        mapping at: toolName put: confidenceFloat.
+    ].
     
-    typesCollection do: [ :hyType |
-        | category typeStr |
-        category := self categoryForSource: hyType source.
-        typeStr := hyType name.
-        
-        grouped 
-            at: category 
-            ifAbsentPut: [ Set new ].
-        (grouped at: category) add: typeStr ].
-    
-    ^ grouped
+    toolConfidenceMap := mapping
 ]
 
 { #category : 'initialization' }
@@ -85,16 +75,16 @@ HyMergeStrategy >> mergeTypes: typesCollection [
 ]
 
 { #category : 'initialization' }
-HyMergeStrategy >> mergeTypes: typesCollection forMethod: methodName inClass: className inPackage: packageName inRepository: repositoryName [
-
-	self subclassResponsibility
-]
-
-{ #category : 'initialization' }
 HyMergeStrategy >> strategyName [
     "Return name of this strategy for reporting"
 
     self subclassResponsibility
+]
+
+{ #category : 'accessing' }
+HyMergeStrategy >> toolConfidenceMap [
+
+	^ toolConfidenceMap
 ]
 
 { #category : 'initialization' }
@@ -117,6 +107,6 @@ HyMergeStrategy >> tools: toolSet [
 HyMergeStrategy >> updateMethod: aMethod withType: selectedType confidence: confidenceValue [
 
 	aMethod
-		selectedType: selectedType
+		selectedReturnType: selectedType;
 		returnTypeConfidence: confidenceValue
 ]
