@@ -132,8 +132,9 @@ HypheReturnsCollectorStatic >> instrumentDomainMethods [
 { #category : 'instrumentation' }
 HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
     "Instrument a method with recording link only (no propagation).
-    Install on send nodes to capture return values."
-    | methodAst sendNodes methodSelector methodClass recLink |
+    Install on send nodes to capture return values.
+    SKIP inlined sends to avoid bytecode generation errors."
+    | methodAst sendNodes methodSelector methodClass recLink skippedCount linkedCount |
     
     "Skip if already instrumented"
     (instrumentedMethods includes: aCompiledMethod) ifTrue: [ ^ self ].
@@ -159,8 +160,9 @@ HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
     
     logger log: '[INSTRUMENT] ', methodClass name, '>>', methodSelector.
     
-    "Get AST and send nodes - with error handling"
+    "Wrap entire instrumentation in error handler"
     [
+        "Get AST and send nodes"
         methodAst := aCompiledMethod ast.
         sendNodes := methodAst sendNodes.
         
@@ -169,26 +171,38 @@ HypheReturnsCollectorStatic >> instrumentMethod: aCompiledMethod [
         "Get the recording link"
         recLink := self recordingLink.
         
-        "Install recording link on send nodes, skipping control flow"
+        skippedCount := 0.
+        linkedCount := 0.
+        
+        "Install recording link on send nodes, skipping inlined and control flow"
         sendNodes do: [ :sendNode |
-            (self shouldSkipInstrumentingSend: sendNode selector) ifFalse: [
+            (self shouldSkipInstrumentingSendNode: sendNode) ifFalse: [
                 (sendNode hasMetalink: recLink)
                     ifFalse: [
-                        "Wrap link installation in error handler for bytecode issues"
+                        "Wrap link installation in error handler"
                         [
                             sendNode link: recLink.
+                            linkedCount := linkedCount + 1.
                             logger log: '[INSTRUMENT] Linked send: ', sendNode selector asString
                         ] on: Error do: [ :ex |
+                            skippedCount := skippedCount + 1.
                             logger log: '[INSTRUMENT] ERROR linking send ', sendNode selector asString, 
                                 ': ', ex messageText
                         ]
                     ]
             ] ifTrue: [
-                logger log: '[INSTRUMENT] Skipped control flow send: ', sendNode selector asString
+                skippedCount := skippedCount + 1.
+                logger log: '[INSTRUMENT] Skipped inlined/control send: ', sendNode selector asString
             ]
-        ]
+        ].
+        
+        logger log: '[INSTRUMENT] Complete for method - Linked: ', linkedCount asString, 
+                    ' Skipped: ', skippedCount asString
+                    
     ] on: Error do: [ :ex |
-        logger log: '[INSTRUMENT] ERROR processing method AST: ', ex messageText
+        logger log: '[INSTRUMENT] ERROR processing method AST: ', ex messageText.
+        "Remove from instrumented if failed"
+        instrumentedMethods remove: aCompiledMethod ifAbsent: []
     ]
 ]
 
@@ -212,6 +226,134 @@ HypheReturnsCollectorStatic >> instrumentTestCase [
 { #category : 'accessing' }
 HypheReturnsCollectorStatic >> logger [
     ^ logger
+]
+
+{ #category : 'data collection' }
+HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver [
+    "Record a return value. Method info must be inferred from receiver.
+    This is the safest approach with minimal reifications."
+    
+    "GUARD: If inside instrumentation, skip recording"
+    (HypheInstrumentationGuard value = true) ifTrue: [ ^ self ].
+    
+    "GUARD: Only record in the owning process (if set)"
+    (owningProcess notNil and: [ Processor activeProcess ~~ owningProcess ]) ifTrue: [ ^ self ].
+    
+    HypheInstrumentationGuard value: true during: [
+        [
+            | receiverClass returnClass dataItem |
+            
+            "Try to get receiver class"
+            [
+                receiverClass := aReceiver class.
+            ] on: Error do: [ :ex |
+                receiverClass := #UnknownReceiver.
+            ].
+            
+            "Try to get return class"
+            [
+                returnClass := returnValue class.
+            ] on: Error do: [ :ex |
+                returnClass := #ErrorGettingReturnType.
+            ].
+            
+            "Create data item WITHOUT method info (we cant reliably get it)"
+            dataItem := HypheReturnDataItem new
+                methodSelector: #unknownSelector;
+                definingClass: receiverClass;
+                receiverClass: receiverClass;
+                returnClass: returnClass;
+                yourself.
+            collectionsData add: dataItem.
+            
+            logger log: '[RECORD] ', receiverClass printString, 
+                        ' returns ', returnClass printString.
+                        
+        ] on: Error do: [ :ex |
+            [ 
+                Transcript show: '[COLLECTOR] Silent error: ', ex messageText; cr.
+            ] on: Error do: [ "ignore" ]
+        ]
+    ]
+]
+
+{ #category : 'data collection' }
+HypheReturnsCollectorStatic >> recordReturnValue: returnValue fromReceiver: aReceiver inContext: aContext [
+    "Record a return value from a method execution.
+    aContext is the execution context, from which we extract the method.
+    Ultra-defensive: catch ALL errors to prevent breaking test execution."
+    
+    "GUARD: If inside instrumentation, skip recording"
+    (HypheInstrumentationGuard value = true) ifTrue: [ ^ self ].
+    
+    "GUARD: Only record in the owning process (if set)"
+    (owningProcess notNil and: [ Processor activeProcess ~~ owningProcess ]) ifTrue: [ ^ self ].
+    
+    HypheInstrumentationGuard value: true during: [
+        [
+            | methodClass methodSelector receiverClass returnClass dataItem aCompiledMethod |
+            
+            "Try to extract the compiled method from context"
+            [
+                aCompiledMethod := (aContext respondsTo: #method) 
+                    ifTrue: [ aContext method ]
+                    ifFalse: [ 
+                        "Fallback: try to get from receiver and selector"
+                        (aContext respondsTo: #selector) 
+                            ifTrue: [ aReceiver class lookupSelector: aContext selector ]
+                            ifFalse: [ nil ]
+                    ].
+            ] on: Error do: [ :ex |
+                aCompiledMethod := nil.
+            ].
+            
+            "Try to get method info"
+            [ 
+                aCompiledMethod ifNotNil: [
+                    methodClass := aCompiledMethod methodClass.
+                    methodSelector := aCompiledMethod selector.
+                ] ifNil: [
+                    methodClass := #UnknownClass.
+                    methodSelector := #unknownSelector.
+                ]
+            ] on: Error do: [ :ex |
+                methodClass := #UnknownClass.
+                methodSelector := #unknownSelector.
+            ].
+            
+            "Try to get receiver class from actual receiver"
+            [
+                receiverClass := aReceiver class.
+            ] on: Error do: [ :ex |
+                receiverClass := #UnknownReceiver.
+            ].
+            
+            "Try to get return class"
+            [
+                returnClass := returnValue class.
+            ] on: Error do: [ :ex |
+                returnClass := #ErrorGettingReturnType.
+            ].
+            
+            "Create and add data item"
+            dataItem := HypheReturnDataItem new
+                methodSelector: methodSelector;
+                definingClass: methodClass;
+                receiverClass: receiverClass;
+                returnClass: returnClass;
+                yourself.
+            collectionsData add: dataItem.
+            
+            logger log: '[RECORD] ', receiverClass printString, ' >> ', methodSelector printString, 
+                        ' returns ', returnClass printString.
+                        
+        ] on: Error do: [ :ex |
+            "Ultimate fallback: if ANYTHING fails, silently continue"
+            [ 
+                Transcript show: '[COLLECTOR] Silent error in recordReturnValue: ', ex messageText; cr.
+            ] on: Error do: [ "ignore even this" ]
+        ]
+    ]
 ]
 
 { #category : 'data collection' }
@@ -334,13 +476,13 @@ HypheReturnsCollectorStatic >> recordReturnValue: returnValue inMethod: aCompile
 { #category : 'instrumentation' }
 HypheReturnsCollectorStatic >> recordingLink [
     "Returns the single recording link for capturing return values.
-    Uses #after control to get return value and receiver from the send."
+    Only reifies value and receiver - no methodToExecute to avoid argument issues."
     
     ^ recordingLinkCache ifNil: [
         recordingLinkCache := MetaLink new
             metaObject: self;
-            selector: #recordReturnValue:fromReceiver:inMethod:;
-            arguments: #(value receiver methodToExecute);
+            selector: #recordReturnValue:fromReceiver:;
+            arguments: #(value receiver);
             control: #after.
         installedLinks add: recordingLinkCache.
         recordingLinkCache
@@ -428,10 +570,34 @@ HypheReturnsCollectorStatic >> shouldInstrumentMethod: aCompiledMethod [
 
 { #category : 'instrumentation' }
 HypheReturnsCollectorStatic >> shouldSkipInstrumentingSend: selector [
-    "Skip control flow methods to avoid bytecode generation errors"
+    "Skip control flow methods and other problematic selectors.
+    This is a selector-based check, complementing the AST node check."
     ^ #(ifTrue: ifFalse: ifTrue:ifFalse: ifFalse:ifTrue: 
+        ifNil: ifNotNil: ifNil:ifNotNil: ifNotNil:ifNil:
         whileTrue: whileFalse: whileTrue whileFalse 
-        and: or: timesRepeat: to:do: to:by:do:
-        repeat cull: cull:cull: cull:cull:cull:
+        and: or: not
+        timesRepeat: to:do: to:by:do:
+        repeat caseOf: caseOf:otherwise:
+        cull: cull:cull: cull:cull:cull:
         on:do: ensure: ifCurtailed:) includes: selector
+]
+
+{ #category : 'instrumentation' }
+HypheReturnsCollectorStatic >> shouldSkipInstrumentingSendNode: aSendNode [
+    "Check if we should skip instrumenting this send node.
+    Returns true if the node is inlined or otherwise problematic."
+    
+    "Check if node is inlined (special compiler optimization)"
+    [ 
+        (aSendNode respondsTo: #isInlined) ifTrue: [
+            aSendNode isInlined ifTrue: [ ^ true ]
+        ]
+    ] on: Error do: [ :ex |
+        "If we cant check, be safe and skip it"
+        logger log: '[INSTRUMENT] Cannot check if inlined, skipping: ', ex messageText.
+        ^ true
+    ].
+    
+    "Also check the selector against known control flow patterns"
+    ^ self shouldSkipInstrumentingSend: aSendNode selector
 ]
