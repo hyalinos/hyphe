@@ -17,6 +17,12 @@ HyMergeStrategy class >> prettyName [
 	self subclassResponsibility 
 ]
 
+{ #category : 'as yet unclassified' }
+HyMergeStrategy >> checkForConfidentType: typesCollection [
+ 
+	^ typesCollection select: [:t | t source = #TypeMeConfident  ]
+]
+
 { #category : 'initialization' }
 HyMergeStrategy >> confidenceLevelFor: confidenceValue [ 
 	

@@ -1,23 +1,14 @@
-"
-I am like the consensus strategy but if there is a ground truth source I take its value and do not continue analysis
-"
 Class {
-	#name : 'HyBiasedConsensusStrategy',
-	#superclass : 'HyConsensusStrategy',
+	#name : 'HyBiasedWeightedVotingStrategy',
+	#superclass : 'HyWeightedVotingStrategy',
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
 	#tag : 'Merge'
 }
 
-{ #category : 'as yet unclassified' }
-HyBiasedConsensusStrategy class >> prettyName [ 
-
-	^ 'Biased Consensus Strategy'
-]
-
 { #category : 'initialization' }
-HyBiasedConsensusStrategy >> mergeTypes: typesCollection [
-    "Require consensus among sources but if confident type is present resturn it"
+HyBiasedWeightedVotingStrategy >> mergeTypes: typesCollection [
+    "Like weighted voting strategy but if confident type is present resturn it"
 
 	| confidentTypes |
 	
@@ -33,5 +24,10 @@ HyBiasedConsensusStrategy >> mergeTypes: typesCollection [
 		 ].
 
 	^ super mergeTypes: typesCollection.
+]
 
+{ #category : 'initialization' }
+HyBiasedWeightedVotingStrategy >> strategyName [
+
+    ^ 'Biased Weighted Voting'
 ]

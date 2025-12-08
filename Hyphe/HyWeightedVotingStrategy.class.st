@@ -19,16 +19,6 @@ HyWeightedVotingStrategy >> initialize [
 ]
 
 { #category : 'initialization' }
-HyWeightedVotingStrategy >> labelForConfidence: conf [
-    conf >= 0.95 ifTrue: [ ^ 'certain' ].
-    conf >= 0.85 ifTrue: [ ^ 'very likely' ].
-    conf >= 0.7 ifTrue: [ ^ 'likely' ].
-    conf >= 0.5 ifTrue: [ ^ 'probable' ].
-    conf >= 0.3 ifTrue: [ ^ 'possible' ].
-    ^ 'uncertain'
-]
-
-{ #category : 'initialization' }
 HyWeightedVotingStrategy >> mergeTypes: typesCollection [
 
 	| votes totalWeight maxVote winnerTypes confidence sources |
@@ -73,7 +63,6 @@ HyWeightedVotingStrategy >> mergeTypes: typesCollection [
 
 	^ Dictionary new
 		  at: #confidence put: confidence;
-		  at: #label put: (self labelForConfidence: confidence);
 		  at: #types put: winnerTypes;
 		  at: #reasoning
 		  put:
