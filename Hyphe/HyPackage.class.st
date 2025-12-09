@@ -22,6 +22,12 @@ HyPackage class >> fromJsonDictionary: aDict [
     ^ instance
 ]
 
+{ #category : 'visiting' }
+HyPackage >> accept: visitor [
+
+	classes do: [:c | visitor visitClass: c  ]
+]
+
 { #category : 'adding' }
 HyPackage >> addClass: newClass [
 
@@ -128,7 +134,7 @@ HyPackage >> updateClass: newClass [
 	| oldClass |
 	
 	oldClass := self getClassNamed: (newClass name).
-	(oldClass equals: newClass) ifFalse: [ 
+	(oldClass = newClass) ifFalse: [ 
 		oldClass updateVariables: newClass variables.
 		oldClass updateMethods: newClass methods. 
 	]

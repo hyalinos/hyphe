@@ -4,18 +4,20 @@ I store and manage all available type information, received from github reposito
 Class {
 	#name : 'Mycelium',
 	#superclass : 'Object',
-	#instVars : [
-		'localData'
-	],
 	#classInstVars : [
 		'defaultFolder',
-		'systemTypes',
-		'libraryTypes'
+		'mycelium'
 	],
 	#category : 'Hyphe-Mycelium',
 	#package : 'Hyphe',
 	#tag : 'Mycelium'
 }
+
+{ #category : 'class initialization' }
+Mycelium class >> addResults: results [
+
+	Mycelium update.
+]
 
 { #category : 'accessing' }
 Mycelium class >> defaultFolder [
@@ -29,63 +31,37 @@ Mycelium class >> defaultFolder: anObject [
 	defaultFolder := anObject
 ]
 
+{ #category : 'accessing' }
+Mycelium class >> exportFromJson: filePath [
+
+	mycelium fromJsonFile: filePath 
+]
+
+{ #category : 'accessing' }
+Mycelium class >> exportToCSV [ 
+
+	mycelium exportToCSV
+]
+
 { #category : 'class initialization' }
 Mycelium class >> initialize [
 
 	defaultFolder := FileLocator imageDirectory / 'data'.
-	systemTypes := Dictionary new.
-	libraryTypes :=Dictionary new.
+	mycelium := HyDataRepresentation. 
 	
 	
 ]
 
 { #category : 'accessing' }
-Mycelium class >> libraryTypes [
+Mycelium class >> mycelium [
 
-	^ libraryTypes
+	^ mycelium
 ]
 
-{ #category : 'accessing' }
-Mycelium class >> libraryTypes: anObject [
+{ #category : 'updating' }
+Mycelium class >> update [
 
-	libraryTypes := anObject
-]
-
-{ #category : 'accessing' }
-Mycelium class >> systemTypes [
-
-	^ systemTypes
-]
-
-{ #category : 'accessing' }
-Mycelium class >> systemTypes: anObject [
-
-	systemTypes := anObject
-]
-
-{ #category : 'initialization' }
-Mycelium >> initialize [
-
-	super initialize.
-	localData := HyDataRepresentation new
-]
-
-{ #category : 'as yet unclassified' }
-Mycelium >> install [
-
-    Iceberg announcer 
-        when: IcePackageLoaded
-        do: [ :evt |
-            Transcript
-                show: 'Загрузился пакет: ';
-                show: evt packageName;
-                cr ]
-		for: self.
-]
-
-{ #category : 'as yet unclassified' }
-Mycelium >> storeToRepository [
-
-	LibC system: 'cd ' , (IceRepository repositoryNamed: #mycelium) location fullName
-		, ' && git add data/* && git commit -m "update data storage" && git push'
+	HypheTypeInferenceStore reload.
+	
+	 
 ]

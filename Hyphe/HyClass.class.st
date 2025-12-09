@@ -26,6 +26,12 @@ HyClass class >> fromJsonDictionary: aDict [
 	^ instance
 ]
 
+{ #category : 'visiting' }
+HyClass >> accept: visitor [
+
+	methods do: [:m | visitor visitMethod: m  ]
+]
+
 { #category : 'adding' }
 HyClass >> addMethod: methodObj [
 

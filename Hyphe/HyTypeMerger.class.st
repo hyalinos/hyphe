@@ -195,17 +195,13 @@ HyTypeMerger >> mergeMethodTypes: aHyMethod [
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 
-	| result |
+	| result dict |
 	result := aMethod returnTypes ifNotEmpty: [
 		          self
 			          mergeForObject: aMethod
 			          withTypes: aMethod returnTypes ].
 
-	aMethod
-		returnTypeConfidence: (result at: #confidence);
-		selectedReturnType:  ((result at: #types) first).
-
-	results add: (Dictionary new
+	dict := Dictionary new
 			 at: #packageName put: aPackage name;
 			 at: #className put: aClass name;
 			 at: #methodName put: aMethod name;
@@ -217,7 +213,23 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 						  (result at: #confidence));
 			 at: #sources put: (result at: #sources);
 			 "at: #reasoning put: (result at: #reasoning);"
-			 yourself).
+			 yourself.
+			
+	results add: dict.
+	
+	aMethod collected: (HyCollectedType new
+		 package: aPackage name;
+		 claz: aClass name;
+		 method: aMethod name;
+		 types: (result at: #types);
+		 confidenceScore: (result at: #confidence);
+		 confidenceLevel: 
+				 (InferenceSettings resolveConfidenceLevel:
+						  (result at: #confidence));
+		sources: (result at: #sources);
+		yourself).
+		
+
 
 
 	"aHyMethod parameters do: [ :param |

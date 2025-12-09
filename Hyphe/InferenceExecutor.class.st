@@ -1,3 +1,6 @@
+"
+Main inference entry point. Ececutes with chosen inference tools and merging strategy
+"
 Class {
 	#name : 'InferenceExecutor',
 	#superclass : 'Object',
@@ -125,7 +128,7 @@ InferenceExecutor >> packages: anObject [
 InferenceExecutor >> processRepository: repoName packages: packageNames [
     | inferenceResults  |
     
-	inferenceResults := HyDataRepresentation new.
+	inferenceResults := Mycelium mycelium.
     
     tools do: [:toolClass |
         | rawResult |

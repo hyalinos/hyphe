@@ -110,9 +110,10 @@ HyMergeStrategy >> tools: toolSet [
 ]
 
 { #category : 'as yet unclassified' }
-HyMergeStrategy >> updateMethod: aMethod withType: selectedType confidence: confidenceValue [
+HyMergeStrategy >> updateMethod: aMethod withResults: results [
 
-	aMethod
+	1 halt.
+	"aMethod
 		selectedReturnType: selectedType;
-		returnTypeConfidence: confidenceValue
+		returnTypeConfidence: confidenceValue"
 ]

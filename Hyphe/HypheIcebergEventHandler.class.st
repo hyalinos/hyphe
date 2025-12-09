@@ -114,7 +114,7 @@ HypheIcebergEventHandler class >> onRepositoryCommited: ann [
 	repo := ann repository.
 	((subscribed at: repo ifAbsent: [^ false ]) at: #onCommit) ifTrue: [
 		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
-		Mycelium libraryTypes: results.
+		Mycelium addResults: results.
 		].
 	
 ]
@@ -191,7 +191,7 @@ HypheIcebergEventHandler class >> onRepositoryPushed: ann [
 	repo := ann repository.
 	((subscribed at: repo ifAbsent: [ ]) at: #onPush) ifTrue: [ 
 		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
-		Mycelium libraryTypes: results.
+		Mycelium addResults: results.
 	]. 
 ]
 

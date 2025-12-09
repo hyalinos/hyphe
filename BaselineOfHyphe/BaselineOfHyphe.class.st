@@ -65,9 +65,8 @@ BaselineOfHyphe >> initialize [
 { #category : 'baselines' }
 BaselineOfHyphe >> initializeTypeStorage [
 
-	Mycelium initialize
-		systemTypes: (HyDataRepresentation fromJsonFile: FileLocator imageDirectory / 'data' / systemName );
-		libraryTypes:  ( downloadedLibraryNames collect: [:name |  name -> (HyDataRepresentation fromJsonFile: FileLocator imageDirectory / 'data' / name)]).
+	Mycelium  exportFromJson: 
+		( FileLocator imageDirectory / 'data' ) files
 ]
 
 { #category : 'baselines' }

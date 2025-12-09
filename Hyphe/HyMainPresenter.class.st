@@ -58,7 +58,7 @@ HyMainPresenter >> initializePresenters [
 		              yourself.
 		
 	shareButton := self newButton
-		               label: 'Share results';
+		               label: 'Save results';
 		               action: [ self shareResults ];
 		               yourself.	
 
@@ -85,6 +85,7 @@ HyMainPresenter >> runInference [
 { #category : 'layout' }
 HyMainPresenter >> shareResults [
 
+	Mycelium mycelium save.
 	
 ]
 
@@ -99,7 +100,7 @@ HyMainPresenter >> subscribePackages [
 { #category : 'layout' }
 HyMainPresenter >> viewResults [
 	
-	HyBrowseResults new open.
+	HyBrowseResults openWithData: (FlatDataCollector collect)
 
 	
 ]

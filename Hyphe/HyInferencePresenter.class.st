@@ -333,6 +333,8 @@ HyInferencePresenter >> runInference [
 		            tools: selectedTools
 		            mergeStrategy: strategy) flattened flatCollect: [ :d |
 		           d results ].
+	Mycelium addResults: results.
+
 	HyBrowseResults openWithData: results.
 	self delete
 ]
