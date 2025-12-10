@@ -38,7 +38,7 @@ FlatDataCollector >> visitMethod: m [
 
 	|calculatedTypes|
 	calculatedTypes := m collected.
-	calculatedTypes ifNotEmpty: [   
+	calculatedTypes ifNotNil: [   
 		calculatedTypes accept: self
 	]
 ]

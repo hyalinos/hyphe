@@ -15,6 +15,23 @@ Class {
 	#tag : 'Data'
 }
 
+{ #category : 'instance creation' }
+HyCollectedType class >> fromJsonDictionary: typeDict [
+ 
+	^ self new
+		package: (typeDict at: 'package');
+		claz: (typeDict at: 'class');
+		method: (typeDict at: 'method');
+		types: (typeDict at: 'types');
+		sources: (typeDict at: 'sources');
+		confidenceLevel: (typeDict at: 'confidenceLevel');
+		confidenceScore: (typeDict at: 'confidenceScore');
+		yourself.
+		
+
+    
+]
+
 { #category : 'visiting' }
 HyCollectedType >> accept: visitor [
 

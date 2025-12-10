@@ -40,7 +40,7 @@ Mycelium class >> erase [
 { #category : 'accessing' }
 Mycelium class >> exportFromDisk [
 
-	((FileLocator imageDirectory / 'data') children) do: [: file | mycelium fromJsonFile: file]. 
+	((FileLocator imageDirectory / 'data') files select: [ :each | each path asString endsWith: '.json''' ]) do: [: file | mycelium fromJsonFile: file]. 
 ]
 
 { #category : 'accessing' }

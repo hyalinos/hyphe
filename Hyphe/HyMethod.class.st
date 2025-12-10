@@ -23,6 +23,9 @@ HyMethod class >> fromJsonDictionary: aDict [
     
     (aDict at: 'returnTypes' ifAbsent: [ #() ]) do: [ :typeDict |
         instance addReturnType: (HyType fromJsonDictionary: typeDict) ].
+
+	(aDict at: 'collected' ifAbsent: [ #() ]) do: [ :typeDict |
+        instance collected: (HyCollectedType fromJsonDictionary: (aDict at: 'collected')) ].
     
     ^ instance
 ]
