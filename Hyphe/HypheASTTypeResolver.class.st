@@ -54,6 +54,34 @@ HypheASTTypeResolver >> isParametricType: aTypeString [
 ]
 
 { #category : 'resolving' }
+HypheASTTypeResolver >> resolveLiteralNode: aNode depth: aDepth [
+    "Resolve a literal node (number, string, symbol, boolean, nil, etc.)"
+    | indent expression literalValue typeName |
+    
+    indent := String new: (aDepth * 2) withAll: $ .
+    expression := self safeExpressionFor: aNode.
+    
+    "Get the literal value"
+    literalValue := [ aNode value ] on: Error do: [ nil ].
+    
+    "Determine the type based on the literal value"
+    literalValue ifNil: [
+        typeName := 'UndefinedObject'.
+    ] ifNotNil: [
+        typeName := literalValue class name asString.
+    ].
+    
+    HypheLogger showCr: indent, '[Hyphe] Resolving literal: ', expression, 
+        ' -> ', typeName, ' (confidence: 1.0)'.
+    
+    ^ Dictionary new
+        at: #type put: typeName;
+        at: #confidence put: 1.0;
+        at: #expression put: expression;
+        yourself
+]
+
+{ #category : 'resolving' }
 HypheASTTypeResolver >> resolveMessageNode: aNode depth: aDepth [
     "Resolve a message send node by first resolving the receiver, 
      then looking up the method return type. Handles parametric types."
@@ -74,8 +102,8 @@ HypheASTTypeResolver >> resolveMessageNode: aNode depth: aDepth [
     HypheLogger showCr: indent, '  Receiver resolved: ', receiverType, 
         ' (confidence: ', receiverConfidence printString, ')'.
     
-    "Step 2: Look up method return type in store"
-    methodResult := store inferenceForClassName: receiverType selector: selector.
+    "Step 2: Look up method return type in store WITH FALLBACK to wildcards"
+    methodResult := store inferenceForClassName: receiverType selector: selector withFallback: true.
     
     methodResult ifNotNil: [
         finalType := methodResult first.
@@ -85,24 +113,37 @@ HypheASTTypeResolver >> resolveMessageNode: aNode depth: aDepth [
         HypheLogger showCr: indent, '    Returns: ', finalType, 
             ' (method confidence: ', methodConfidence printString, ')'.
         
-        "Step 3: Check if return type is parametric (e.g., *t1, *t2)"
-        (self isParametricType: finalType) ifTrue: [
-            parametricResult := self resolveParametricType: finalType forMessage: aNode depth: aDepth.
-            finalType := parametricResult at: #type.
-            "Compose all confidences: receiver * method * argument"
-            finalConfidence := receiverConfidence * methodConfidence * (parametricResult at: #confidence).
-            
-            HypheLogger showCr: indent, '    Final composed confidence: ', 
-                receiverConfidence printString, ' * ', methodConfidence printString, 
-                ' * ', (parametricResult at: #confidence) printString, 
-                ' = ', finalConfidence printString.
-        ] ifFalse: [
-            "Non-parametric type: compose receiver and method confidences"
+        "Step 3: Check if return type is parametric (e.g., *t1, *t2) or receiver (*r)"
+        (finalType = '*r') ifTrue: [
+            "Return type is the receiver type"
+            HypheLogger showCr: indent, '    Receiver type (*r) detected: returns ', receiverType.
             finalConfidence := receiverConfidence * methodConfidence.
             
             HypheLogger showCr: indent, '    Composed confidence: ', 
                 receiverConfidence printString, ' * ', methodConfidence printString, 
                 ' = ', finalConfidence printString.
+            
+            finalType := receiverType.
+        ] ifFalse: [
+            (self isParametricType: finalType) ifTrue: [
+                "Parametric type referencing an argument"
+                parametricResult := self resolveParametricType: finalType forMessage: aNode depth: aDepth.
+                finalType := parametricResult at: #type.
+                "Compose all confidences: receiver * method * argument"
+                finalConfidence := receiverConfidence * methodConfidence * (parametricResult at: #confidence).
+                
+                HypheLogger showCr: indent, '    Final composed confidence: ', 
+                    receiverConfidence printString, ' * ', methodConfidence printString, 
+                    ' * ', (parametricResult at: #confidence) printString, 
+                    ' = ', finalConfidence printString.
+            ] ifFalse: [
+                "Non-parametric type: compose receiver and method confidences"
+                finalConfidence := receiverConfidence * methodConfidence.
+                
+                HypheLogger showCr: indent, '    Composed confidence: ', 
+                    receiverConfidence printString, ' * ', methodConfidence printString, 
+                    ' = ', finalConfidence printString.
+            ]
         ].
         
         ^ Dictionary new
@@ -247,6 +288,10 @@ HypheASTTypeResolver >> resolveNode: aNode selector: aSelectorOrNil depth: aDept
     (aNode isKindOf: OCVariableNode) ifTrue: [
         ^ self resolveVariableNode: aNode depth: aDepth ].
     
+    "Check if it's a literal node (numbers, strings, symbols, booleans, nil)"
+    (aNode isKindOf: OCLiteralNode) ifTrue: [
+        ^ self resolveLiteralNode: aNode depth: aDepth ].
+    
     "Check if it has a #type property (already annotated)"
     [ | typeProperty |
         typeProperty := aNode propertyAt: #type ifAbsent: [ nil ].
@@ -304,8 +349,9 @@ HypheASTTypeResolver >> resolveParametricType: parametricType forMessage: aMessa
 
 { #category : 'resolving' }
 HypheASTTypeResolver >> resolveVariableNode: aNode depth: aDepth [
-    "Resolve a variable node by checking its annotated type property"
-    | indent typeProperty expression |
+    "Resolve a variable node by checking its annotated type property.
+     If the variable is a class reference (uppercase), resolve it as ClassName class"
+    | indent typeProperty expression varName classObject |
     
     indent := String new: (aDepth * 2) withAll: $ .
     expression := self safeExpressionFor: aNode.
@@ -323,14 +369,30 @@ HypheASTTypeResolver >> resolveVariableNode: aNode depth: aDepth [
             at: #confidence put: 1.0;
             at: #expression put: expression;
             yourself
-    ] ifNil: [
-        HypheLogger showCr: indent, '  Type: Unknown (confidence: 0.0)'.
-        ^ Dictionary new
-            at: #type put: 'Unknown';
-            at: #confidence put: 0.0;
-            at: #expression put: expression;
-            yourself
-    ]
+    ].
+    
+    "Check if variable is a class reference (starts with uppercase)"
+    varName := expression trimBoth.
+    (varName notEmpty and: [ varName first isUppercase ]) ifTrue: [
+        classObject := Smalltalk globals at: varName asSymbol ifAbsent: [ nil ].
+        (classObject notNil and: [ classObject isBehavior ]) ifTrue: [
+            "It's a class reference - type is 'ClassName class'"
+            HypheLogger showCr: indent, '  Type: ', varName, ' class (confidence: 1.0) [class reference]'.
+            ^ Dictionary new
+                at: #type put: varName, ' class';
+                at: #confidence put: 1.0;
+                at: #expression put: expression;
+                yourself
+        ]
+    ].
+    
+    "Default: Unknown type"
+    HypheLogger showCr: indent, '  Type: Unknown (confidence: 0.0)'.
+    ^ Dictionary new
+        at: #type put: 'Unknown';
+        at: #confidence put: 0.0;
+        at: #expression put: expression;
+        yourself
 ]
 
 { #category : 'private' }

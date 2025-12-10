@@ -38,6 +38,12 @@ HypheTypeInferenceStore class >> reset [
 	UniqueInstance := nil
 ]
 
+{ #category : 'testing' }
+HypheTypeInferenceStore class >> setForTesting: aStoreInstance [
+	"Temporarily set the singleton to a specific instance for testing purposes"
+	UniqueInstance := aStoreInstance
+]
+
 { #category : 'accessing' }
 HypheTypeInferenceStore >> allInferences [
 	"Return the raw dictionary for debugging"
@@ -77,29 +83,64 @@ HypheTypeInferenceStore >> inferenceForClass: aClass selector: aSelector [
 { #category : 'querying' }
 HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector [
 	"Return {inferredType. confidence} or nil if not found.
-	 Searches for exact class match first, then walks superclass chain."
-	| key |
+	 Lookup strategy:
+	   1. Try exact match: ClassName>>selector
+	   2. Walk up superclass chain: Superclass>>selector, etc."
+	| key result currentClass classObject |
 	
-		key := aClassName asString , '>' , '>' , aSelector asString.
-		^inferenceData at: key ifAbsent: [HypheLogger showCr:'keyNotFound: ',key . nil ].
-		
+	"Try exact match first"
+	key := aClassName asString , '>>' , aSelector asString.
+	result := inferenceData at: key ifAbsent: [ nil ].
+	result ifNotNil: [ ^ result ].
+	
+	"Try superclass hierarchy lookup"
+	classObject := Smalltalk globals at: aClassName asString asSymbol ifAbsent: [ nil ].
+	(classObject notNil and: [ classObject isBehavior ]) ifTrue: [
+		currentClass := classObject superclass.
+		[ currentClass notNil ] whileTrue: [
+			key := currentClass name asString , '>>' , aSelector asString.
+			result := inferenceData at: key ifAbsent: [ nil ].
+			result ifNotNil: [ 
+				HypheLogger showCr: '    Using superclass entry: ', currentClass name, '>>', aSelector asString.
+				^ result ].
+			currentClass := currentClass superclass
+		]
+	].
+	
+	"Not found"
+	HypheLogger showCr: 'keyNotFound: ', aClassName asString, '>>', aSelector asString.
+	^ nil
 ]
 
 { #category : 'querying' }
 HypheTypeInferenceStore >> inferenceForClassName: aClassName selector: aSelector withFallback: useFallback [
     "Return {inferredType. confidence} or nil if not found.
-     If withFallback is true and exact match not found, try *r>>selector as fallback.
      Lookup strategy:
        1. Try exact match: ClassName>>selector
-       2. If useFallback and not found: try *r>>selector (generic)"
-    | key result |
+       2. Walk up superclass chain: Superclass>>selector, etc.
+       3. If useFallback and still not found: try *r>>selector (generic wildcard)"
+    | key result currentClass classObject |
     
     "Try exact match first"
     key := aClassName asString , '>>' , aSelector asString.
     result := inferenceData at: key ifAbsent: [ nil ].
     result ifNotNil: [ ^ result ].
     
-    "If fallback enabled, try generic *r>>selector entry"
+    "Try superclass hierarchy lookup"
+    classObject := Smalltalk globals at: aClassName asString asSymbol ifAbsent: [ nil ].
+    (classObject notNil and: [ classObject isBehavior ]) ifTrue: [
+        currentClass := classObject superclass.
+        [ currentClass notNil ] whileTrue: [
+            key := currentClass name asString , '>>' , aSelector asString.
+            result := inferenceData at: key ifAbsent: [ nil ].
+            result ifNotNil: [ 
+                HypheLogger showCr: '    Using superclass entry: ', currentClass name, '>>', aSelector asString.
+                ^ result ].
+            currentClass := currentClass superclass
+        ]
+    ].
+    
+    "If fallback enabled, try generic *r>>selector entry as last resort"
     useFallback ifTrue: [
         key := '*r>>' , aSelector asString.
         result := inferenceData at: key ifAbsent: [ nil ].
