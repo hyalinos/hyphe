@@ -37,14 +37,15 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
     (usage size between: 2 and: 3) ifTrue: [
         ^ Dictionary new
             at: #confidence put: 0.6;
-            at: #label put: (usage collect: [:t | t name]) asOrderedCollection;
+            at: #types put: (usage collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Multiple types in usage (bounded polymorphism)';
+			   at: #sources put: (usage collect: [:t | t source]) asOrderedCollection ;
             yourself ].
     
     usage size > 3 ifTrue: [
         ^ Dictionary new
             at: #confidence put: 0.4;
-            at: #label put: (usage collect: [:t | t name]) asOrderedCollection;
+            at: #types put: (usage collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Highly polymorphic usage';
 				at: #sources put: (usage collect: [:t | t source]) asOrderedCollection ;
             yourself ].
@@ -58,34 +59,29 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
 			|names namesInBoth merged|
 			names := (usage collect: [:t | t name]).
 			namesInBoth := nameHint collect: [:t | names includes: t name  ].
-			merged := ((usage collect: [:t | t source]) asOrderedCollection) addAll: (nameHint collect: [:t | t source]) asOrderedCollection.  
+			merged := (((usage collect: [:t | t source]) asOrderedCollection) addAll: (nameHint collect: [:t | t source])) yourself.  
             ^ Dictionary new
                 at: #confidence put: 0.7;
-                at: #label put: namesInBoth asOrderedCollection;
+                at: #types put: namesInBoth asOrderedCollection;
                 at: #reasoning put: 'Usage confirmed by naming';
-				   at: #sources put: merged ;
-				   at: #sources put: (nameHint collect: [:t | t source]) asOrderedCollection ;
-                yourself ].
-        
-        ^ Dictionary new
-            at: #confidence put: 0.75;
-            at: #label put: 'probable';
-            at: #reasoning put: 'Usage only (name suggests different)';
-            yourself ].
+				    at: #sources put: merged ;
+                yourself ]. 
+		].
     
     "Tier 5: Name heuristic only"
     nameHint ifNotEmpty: [
         ^ Dictionary new
-            at: #confidence put: 0.4;
-            at: #label put: (nameHint collect: [:t | t name]) asOrderedCollection;
+            at: #confidence put: 0.5;
+            at: #types put: (nameHint collect: [:t | t name]) asOrderedCollection;
             at: #reasoning put: 'Name heuristic only (unreliable)';
-				at: #sources put: OrderedCollection new ;
+				at: #sources put: (nameHint collect: [:t | t source]) asOrderedCollection ;
             yourself ].
     
     "Tier 6: No information"
     ^ Dictionary new
         at: #confidence put: 0.0;
-        at: #label put: 'unknown';
+        at: #types put: OrderedCollection new;
+		  at: #sources put: OrderedCollection new ;
         at: #reasoning put: 'No type information available';
         yourself
 ]
