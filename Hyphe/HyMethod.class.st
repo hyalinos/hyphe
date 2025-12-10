@@ -5,8 +5,7 @@ Class {
 		'name',
 		'parameters',
 		'returnTypes',
-		'returnTypeConfidence',
-		'selectedReturnType'
+		'collected'
 	],
 	#category : 'Hyphe-Data',
 	#package : 'Hyphe',
@@ -24,14 +23,17 @@ HyMethod class >> fromJsonDictionary: aDict [
     
     (aDict at: 'returnTypes' ifAbsent: [ #() ]) do: [ :typeDict |
         instance addReturnType: (HyType fromJsonDictionary: typeDict) ].
+
+	(aDict at: 'collected' ifAbsent: [ #() ]) do: [ :typeDict |
+        instance collected: (HyCollectedType fromJsonDictionary: (aDict at: 'collected')) ].
     
     ^ instance
 ]
 
-{ #category : 'accessing' }
-HyMethod >> InferenceResultsExporter [
+{ #category : 'visiting' }
+HyMethod >> accept: visitor [
 
-	^ returnTypeConfidence
+	visitor visitCollected: collected
 ]
 
 { #category : 'adding' }
@@ -74,7 +76,21 @@ HyMethod >> asJsonDictionary [
     returnTypes ifNotEmpty: [
         dict at: 'returnTypes' put: (returnTypes collect: [ :type | type asJsonDictionary ]) asArray ].
     
+	collected ifNotNil: [
+        dict at: 'collected' put: (collected asJsonDictionary) ].
     ^ dict
+]
+
+{ #category : 'accessing' }
+HyMethod >> collected [
+
+	^ collected
+]
+
+{ #category : 'accessing' }
+HyMethod >> collected: anObject [
+
+	collected := anObject
 ]
 
 { #category : 'adding' }
@@ -117,7 +133,8 @@ HyMethod >> initialize [
 
 	super initialize.
 	returnTypes := OrderedCollection new.
-	parameters := OrderedCollection new
+	parameters := OrderedCollection new.
+	collected := OrderedCollection new.
 ]
 
 { #category : 'accessing' }
@@ -145,18 +162,6 @@ HyMethod >> parameters: anObject [
 ]
 
 { #category : 'accessing' }
-HyMethod >> returnTypeConfidence [
-
-	^ returnTypeConfidence
-]
-
-{ #category : 'accessing' }
-HyMethod >> returnTypeConfidence: anObject [
-
-	returnTypeConfidence := anObject
-]
-
-{ #category : 'accessing' }
 HyMethod >> returnTypes [
 
 	^ returnTypes
@@ -168,14 +173,7 @@ HyMethod >> returnTypes: anObject [
 	returnTypes := anObject
 ]
 
-{ #category : 'accessing' }
-HyMethod >> selectedReturnType [
-
-	^ selectedReturnType
-]
-
-{ #category : 'accessing' }
-HyMethod >> selectedReturnType: selectedType [
-
-	selectedReturnType := selectedType 
+{ #category : 'as yet unclassified' }
+HyMethod >> updataReturnTypes: newTypesCollection [ 
+	 returnTypes do: [:r | newTypesCollection do: [:n | (r equals: n) ifFalse: [ returnTypes add: n ] ]  ]
 ]

@@ -7,15 +7,15 @@ Class {
 	#classVars : [
 		'UniqueInstance'
 	],
-	#category : 'Hyphe-StaticInference',
+	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
-	#tag : 'StaticInference'
+	#tag : 'Injection'
 }
 
 { #category : 'accessing' }
 HypheTypeInferenceStore class >> csvPath [
 	"Return the path to the CSV file relative to image directory"
-	^ FileLocator imageDirectory / 'typeToConfidence.csv'
+	^ FileLocator imageDirectory / 'data' / 'typeToConfidence.csv'
 ]
 
 { #category : 'accessing' }

@@ -5,3 +5,9 @@ Class {
 	#package : 'Hyphe',
 	#tag : 'Export'
 }
+
+{ #category : 'initialization' }
+OfflineProfilerResultsExporter >> initialize [     
+	 super initialize.
+    defaultSource := 'Offline Test Profiling'.
+]

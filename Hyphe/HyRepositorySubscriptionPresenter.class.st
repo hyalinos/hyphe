@@ -53,7 +53,7 @@ HyRepositorySubscriptionPresenter >> defaultLayout [
 		  add: SpBoxLayout newVertical expand: false;
 		  add: (SpBoxLayout newHorizontal
 					add: commitCheckbox expand: false;
-				   add: pullCheckbox expand: false;
+				   "add: pullCheckbox expand: false;"
 				   add: pushCheckbox expand: false;
 				   yourself)
 		  expand: false;
@@ -112,12 +112,14 @@ HyRepositorySubscriptionPresenter >> initializePresenters [
 	titleLabel := self newLabel
 		              label: 'Subscribe repositories for automatic type inference';
 		              yourself.
+		
 	repositoryList := self newList
 		                  items: self loadIcebergRepositories;
 		                  display: [ :repo | repo name ];
 		                  yourself.
 
 	selectedRepositoryList := self newList
+										 items: (InferenceSettings subscribedRepositories); 
 		                          display: [ :repo | repo name ];
 		                          yourself.
 	addButton := self newButton
@@ -144,10 +146,12 @@ HyRepositorySubscriptionPresenter >> initializePresenters [
 								   whenActivatedDo: [ self enableActionCheckboxes ];
 									whenDeactivatedDo: [ self disableActionCheckboxes ];
 		                     state: false;
+									enabled: false;
 		                     yourself.
 
 	pullCheckbox := self newCheckBox
 		                label: 'Git pull';
+							 enabled: false;
 		                yourself.
 
 	commitCheckbox := self newCheckBox
@@ -156,17 +160,21 @@ HyRepositorySubscriptionPresenter >> initializePresenters [
 
 	pushCheckbox := self newCheckBox
 		                label: 'Git push';
+		                enabled: false;
 		                yourself.
 
 	packageAddedCheckbox := self newCheckBox
 		                        label: 'Package added';
+		                        enabled: false;
 		                        yourself.
 
 	packageRemovedCheckbox := self newCheckBox
 		                          label: 'Package removed';
+		                          enabled: false;
 		                          yourself.
 	subscribeAllCheckbox := self newCheckBox
 		                        label: 'Subscribe all future repositories';
+										state: InferenceSettings monitorAllNewRepositories;
 		                        yourself.
 	saveButton := self newButton
 		              label: 'Save';
@@ -190,7 +198,7 @@ HyRepositorySubscriptionPresenter >> initializeWindow: aWindowPresenter [
 { #category : 'layout' }
 HyRepositorySubscriptionPresenter >> loadIcebergRepositories [ 
 	
-	^ IceRepository registry
+	^ IceRepository registry reject: [:r | InferenceSettings subscribedRepositories includes: r ]
 
 
 ]
@@ -216,8 +224,10 @@ HyRepositorySubscriptionPresenter >> onCancel [
 
 { #category : 'layout' }
 HyRepositorySubscriptionPresenter >> onClearRepositories [ 
-	"Clear all repositories from selected list"
-	selectedRepositoryList items: #()
+
+	selectedRepositoryList items: #().
+	InferenceSettings subscribedRepositories: OrderedCollection new.
+	HypheIcebergEventHandler subscribed: OrderedCollection new.
 
 ]
 
@@ -233,18 +243,20 @@ HyRepositorySubscriptionPresenter >> onRemoveRepository [
 
 { #category : 'layout' }
 HyRepositorySubscriptionPresenter >> onSave [ 
-	"Save the configuration and close the window"
+
 	| config |
 	config := Dictionary new.
-	config at: #repositories put: selectedRepositoryList items.
 	config at: #onPull put: pullCheckbox state.
 	config at: #onCommit put: commitCheckbox state.
 	config at: #onPush put: pushCheckbox state.
 	config at: #onPackageAdded put: packageAddedCheckbox state.
 	config at: #onPackageRemoved put: packageRemovedCheckbox state.
-	config at: #subscribeAllFuture put: subscribeAllCheckbox state.
+		
+	(subscribeAllCheckbox state) ifTrue: [ InferenceSettings monitorAllNewRepositories: true ] ifFalse: [InferenceSettings monitorAllNewRepositories: false ].
+	InferenceSettings subscribedRepositories: (selectedRepositoryList items). 
 	
-	"Here you would typically save the configuration"
+	HypheIcebergEventHandler addRepositories: ((selectedRepositoryList items) collect: [:item | item -> config]).
+	
 	self inform: 'Configuration saved successfully'.
 	self window close
 ]

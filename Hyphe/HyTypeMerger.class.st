@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'strategy',
 		'hyData',
-		'results'
+		'results',
+		'tools'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -22,6 +23,15 @@ HyTypeMerger class >> newWithStrategy: aStrategy [
 
     ^ super new
         strategy: aStrategy;
+        yourself
+]
+
+{ #category : 'instance creation' }
+HyTypeMerger class >> newWithStrategy: aStrategy tools: tools [
+
+    ^ super new
+        strategy: aStrategy;
+		  tools: tools;
         yourself
 ]
 
@@ -151,11 +161,13 @@ HyTypeMerger >> labelForConfidence: conf [
 HyTypeMerger >> mergeForObject: anObject withTypes: typesCollection [
 
 
+	|str |
 	typesCollection ifEmpty: [
 			anObject confidence: 0.0.
 			^ self ].
 
-	^ strategy new mergeTypes: typesCollection
+	str := strategy new tools: tools.
+	^ str mergeTypes: typesCollection
 ]
 
 { #category : 'as yet unclassified' }
@@ -183,17 +195,13 @@ HyTypeMerger >> mergeMethodTypes: aHyMethod [
 { #category : 'as yet unclassified' }
 HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 
-	| result |
+	| result dict |
 	result := aMethod returnTypes ifNotEmpty: [
 		          self
 			          mergeForObject: aMethod
 			          withTypes: aMethod returnTypes ].
 
-	aMethod
-		returnTypeConfidence: (result at: #confidence);
-		selectedReturnType: (result at: #types).
-
-	results add: (Dictionary new
+	dict := Dictionary new
 			 at: #packageName put: aPackage name;
 			 at: #className put: aClass name;
 			 at: #methodName put: aMethod name;
@@ -204,8 +212,24 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 				 (InferenceSettings resolveConfidenceLevel:
 						  (result at: #confidence));
 			 at: #sources put: (result at: #sources);
-			 at: #reasoning put: (result at: #reasoning);
-			 yourself).
+			 "at: #reasoning put: (result at: #reasoning);"
+			 yourself.
+			
+	results add: dict.
+	
+	aMethod collected: (HyCollectedType new
+		 package: aPackage name;
+		 claz: aClass name;
+		 method: aMethod name;
+		 types: (result at: #types);
+		 confidenceScore: (result at: #confidence);
+		 confidenceLevel: 
+				 (InferenceSettings resolveConfidenceLevel:
+						  (result at: #confidence));
+		sources: (result at: #sources);
+		yourself).
+		
+
 
 
 	"aHyMethod parameters do: [ :param |
@@ -268,4 +292,16 @@ HyTypeMerger >> strategy [
 HyTypeMerger >> strategy: anObject [
 
 	strategy := anObject
+]
+
+{ #category : 'accessing' }
+HyTypeMerger >> tools [
+
+	^ tools
+]
+
+{ #category : 'accessing' }
+HyTypeMerger >> tools: anObject [
+
+	tools := anObject
 ]

@@ -14,6 +14,12 @@ HyEntity class >> fromJsonDictionary: aDict [
 	self subclassResponsibility 
 ]
 
+{ #category : 'visiting' }
+HyEntity >> accept: visitor [
+
+	self subclassResponsibility
+]
+
 { #category : 'converting' }
 HyEntity >> asJsonDictionary [ 
 	self subclassResponsibility 

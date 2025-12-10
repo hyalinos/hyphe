@@ -1,7 +1,7 @@
 Class {
 	#name : 'HyDataRepresentation',
 	#superclass : 'Object',
-	#instVars : [
+	#classInstVars : [
 		'filePath',
 		'metadata',
 		'packages'
@@ -11,78 +11,79 @@ Class {
 	#tag : 'Data'
 }
 
-{ #category : 'instance creation' }
-HyDataRepresentation class >> fromJsonFile: aPath [
+{ #category : 'visiting' }
+HyDataRepresentation class >> accept: visitor [
 
-	| data instance |
-	aPath asFileReference readStreamDo: [ :stream |
-		data := (NeoJSONReader on: stream) next ].
-	instance := self new
-		            filePath: aPath;
-		            yourself.
-	data do: [ :packageDict |
-		instance addPackage: (HyPackage fromJsonDictionary: packageDict) ].
-	^ instance
+	packages do: [:p | visitor visitPackage: p ]
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> addPackage: aPackageObj [
+HyDataRepresentation class >> addPackage: aPackageObj [
 
-	(self hasPackageNamed: aPackageObj name) ifFalse: [ 
-		packages add: aPackageObj.
-		^ aPackageObj
-		]
-	ifTrue: [ 
-		^ (self getPackageNamed: aPackageObj name) updateClasses: (aPackageObj classes)
-	].
-	 
+	(self hasPackageNamed: aPackageObj name)
+		ifFalse: [
+				self packages add: aPackageObj.
+				^ aPackageObj ]
+		ifTrue: [
+				^ (self getPackageNamed: aPackageObj name)
+					  updateClasses: aPackageObj classes ]
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> addPackageNamed: packageName [
+HyDataRepresentation class >> addPackageNamed: packageName [
 
-	(self hasPackageNamed: packageName) ifFalse: [ packages add: (HyPackage new name: packageName; yourself)].
-	^ packages getPackage: packageName
+
+	(self hasPackageNamed: packageName) ifFalse: [
+			self packages add: (HyPackage new
+					 name: packageName;
+					 yourself) ].
+	^ packages getPackageNamed: packageName
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> addPackageNamed: packageName withClasses: classesCollection [
+HyDataRepresentation class >> addPackageNamed: packageName withClasses: classesCollection [
 
-	(self hasPackageNamed: packageName) ifFalse: [ 
-		packages add: (HyPackage new name: packageName; classes: classesCollection; yourself).
-		^ packages getPackageNamed: packageName
-		]
-	ifTrue: [ 
-		^ (packages getPackageNamed: packageName) updateClasses: classesCollection.
-	].
+
+	(self hasPackageNamed: packageName)
+		ifFalse: [
+				packages add: (HyPackage new
+						 name: packageName;
+						 classes: classesCollection;
+						 yourself).
+				^ packages getPackageNamed: packageName ]
+		ifTrue: [
+				^ (packages getPackageNamed: packageName)
+					  updateClasses: classesCollection ]
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> asJsonDictionary [
+HyDataRepresentation class >> asJsonDictionary [
 
-    ^ OrderedCollection new
-        addAll: (packages collect: [ :pkg | pkg asJsonDictionary ]);
-        yourself
+	^ OrderedCollection new
+		  addAll: (packages collect: [ :pkg |
+					   pkg asJsonDictionary ]);
+		  yourself
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> defaultFilePath [
+HyDataRepresentation class >> defaultFilePath [
 
-	^ 'types.json'
+	^ FileLocator imageDirectory / 'data' / 'mycelium.json'
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> exportToJson [
+HyDataRepresentation class >> exportToJson [
 
-    ^ self exportToJsonFile: filePath
+	^ self exportToJsonFile: filePath
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> exportToJsonFile: aPath [
+HyDataRepresentation class >> exportToJsonFile: aPath [
 
-	| jsonDict file |
+	| jsonDict file  |
+	
 	jsonDict := self asJsonDictionary.
-	aPath asFileReference delete.
+	aPath asFileReference ensureDelete.
 	file := aPath asFileReference.
 	file writeStreamDo: [ :stream |
 			(NeoJSONWriter on: stream)
@@ -92,81 +93,97 @@ HyDataRepresentation >> exportToJsonFile: aPath [
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> exportToJsonString [
+HyDataRepresentation class >> exportToJsonString [
 
-    | jsonDict |
-    jsonDict := self asJsonDictionary.
-    ^ String streamContents: [ :stream |
-        (NeoJSONWriter on: stream)
-            prettyPrint: true;
-            nextPut: jsonDict ]
+	| jsonDict  |
+
+	jsonDict := self asJsonDictionary.
+	^ String streamContents: [ :stream |
+			  (NeoJSONWriter on: stream)
+				  prettyPrint: true;
+				  nextPut: jsonDict ]
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> filePath [
+HyDataRepresentation class >> filePath [
 
 	^ filePath
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> filePath: anObject [
+HyDataRepresentation class >> filePath: anObject [
 
 	filePath := anObject
 ]
 
-{ #category : 'adding' }
-HyDataRepresentation >> getPackageNamed: aPackage [
+{ #category : 'instance creation' }
+HyDataRepresentation class >> fromJsonFile: aPath [
 
-	^ (packages select: [ :p | p name = aPackage ]) first 
+	| data |
+	aPath readStreamDo: [ :stream |
+		data := (NeoJSONReader on: stream) next ].
+	
+	data do: [ :packageDict |
+		self addPackage: (HyPackage fromJsonDictionary: packageDict) ].
+
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> hasPackageNamed: aPackage [
+HyDataRepresentation class >> getPackageNamed: aPackage [
 
-	^ packages anySatisfy: [ :p | p name = aPackage ] 
+
+	^ (packages select: [ :p | p name = aPackage ])
+		  first
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> initialize [
+HyDataRepresentation class >> hasPackageNamed: aPackage [
 
-	super initialize.
+	^ packages anySatisfy: [ :p |
+		  p name = aPackage ]
+]
+
+{ #category : 'adding' }
+HyDataRepresentation class >> initialize [
+
 	packages := OrderedCollection new.
 	filePath := self defaultFilePath
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> metadata [
+HyDataRepresentation class >> metadata [
 
-	^ metadata
+	^  metadata
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> metadata: anObject [
+HyDataRepresentation class >> metadata: anObject [
 
-	metadata := anObject
+  metadata := anObject
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> packages [
-	
-	^ packages 
+HyDataRepresentation class >> packages [
+
+	^ packages
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> packages: anObject [
+HyDataRepresentation class >> packages: anObject [
 
 	packages := anObject
 ]
 
 { #category : 'adding' }
-HyDataRepresentation >> removePackageNamed: packageName [
+HyDataRepresentation class >> removePackageNamed: packageName [
 
 	(self hasPackageNamed: packageName) ifTrue: [
-		packages remove: (self getPackageNamed: packageName) ]
+			packages remove:
+				(self getPackageNamed: packageName) ]
 ]
 
 { #category : 'accessing' }
-HyDataRepresentation >> save [
+HyDataRepresentation class >> save [
 
 	^ self exportToJsonFile: filePath
 ]

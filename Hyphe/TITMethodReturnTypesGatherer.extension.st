@@ -14,3 +14,9 @@ TITMethodReturnTypesGatherer class >> runHypheInference: packageNames [
 	^ packageNames flatCollect: [:p | inst gatherPackage: p ].
 	
 ]
+
+{ #category : '*Hyphe' }
+TITMethodReturnTypesGatherer class >> tier [
+ 
+	^#observation
+]

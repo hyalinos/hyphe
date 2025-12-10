@@ -5,3 +5,9 @@ TypeMeConfident class >> hypheExporter [
 
 ^ TypeMeConfidentResultsExporter
 ]
+
+{ #category : '*Hyphe' }
+TypeMeConfident class >> tier [
+
+  ^ #structural
+]

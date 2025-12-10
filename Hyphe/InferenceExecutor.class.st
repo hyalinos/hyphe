@@ -1,3 +1,6 @@
+"
+Main inference entry point. Ececutes with chosen inference tools and merging strategy
+"
 Class {
 	#name : 'InferenceExecutor',
 	#superclass : 'Object',
@@ -28,26 +31,15 @@ InferenceExecutor class >> buildConfidenceMap [
 
 { #category : 'as yet unclassified' }
 InferenceExecutor class >> executeWithPackages: packageNames tools: selectedTools mergeStrategy: aStrategy [
-
-
-  	 ^ self new
+	
+	^ self new
 		packages:	packageNames;
 		tools: selectedTools;
 		confidenceMap: self buildConfidenceMap;
-	   merger: (HyTypeMerger newWithStrategy: aStrategy);
+	   merger: (HyTypeMerger newWithStrategy: aStrategy tools: selectedTools );
 	   results: Dictionary new;
 		execute.
     
-]
-
-{ #category : 'as yet unclassified' }
-InferenceExecutor class >> groupForPresenter: aCollection [ 
-	
-	aCollection flatCollect: [ :d |  d hyData packages flatCollect: [:p | p classes flatCollect: [ :c | c methods flatCollect: [ :m |
-					1 halt.
-					m
-					
-					 ] ]  ] ]
 ]
 
 { #category : 'accessing' }
@@ -136,10 +128,10 @@ InferenceExecutor >> packages: anObject [
 InferenceExecutor >> processRepository: repoName packages: packageNames [
     | inferenceResults  |
     
-	inferenceResults := HyDataRepresentation new.
+	inferenceResults := Mycelium mycelium.
     
     tools do: [:toolClass |
-        | result rawResult |
+        | rawResult |
         rawResult := toolClass runHypheInference: packageNames. 
 		  toolClass hypheExporter export: rawResult to: inferenceResults .
 		].

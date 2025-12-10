@@ -152,6 +152,36 @@ HypheProcessedReturns >> mergeReturnsInfo: incomingItem into: existingItem [
 ]
 
 { #category : 'private' }
+HypheProcessedReturns >> pruneToSingleType [
+
+	
+	self byPackage values flattened do: [: item |
+		(item returnsInfo size < 2) ifFalse: [ 
+			|max|
+			max := item returnsInfo detectMax: [ :i | i percentage ].
+			item returnsInfo: (OrderedCollection new add: max; yourself)
+			 ] 
+		  ]
+]
+
+{ #category : 'private' }
+HypheProcessedReturns >> pruneToTop25p [
+
+	
+	|allReturnsItem counts threshhold|
+	allReturnsItem := self byPackage values flattened.
+	counts := (allReturnsItem collect: [ :item | item returnsInfo first count ]) sorted.
+	threshhold := counts at: ((counts size * 0.25) ceiling max: 1).
+	allReturnsItem do: [: item |
+		(item returnsInfo first count < threshhold ) ifTrue: [ 
+			item returnsInfo: (OrderedCollection new)
+			] 
+		  ]
+	
+	
+]
+
+{ #category : 'private' }
 HypheProcessedReturns >> resolveAllPackages [
     "Resolve package for each item in the dictionary"
     self values do: [ :item | item resolvePackage ]

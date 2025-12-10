@@ -201,6 +201,39 @@ Class {
 	#tag : 'Collectors'
 }
 
+{ #category : 'as yet unclassified' }
+HypheReturnsCollectorMethodNodes class >> hypheExporter [
+
+	^ OfflineProfilerResultsExporter
+]
+
+{ #category : 'as yet unclassified' }
+HypheReturnsCollectorMethodNodes class >> runHypheInference: packageNames [
+
+	| collector rawResult processedForExport results|
+
+	results := OrderedCollection new.
+	collector := self new.
+	rawResult := (collector processPackages: packageNames) asProcessedResults.
+	processedForExport := rawResult copy.
+	
+	processedForExport dictionary ifNotEmpty: [ 
+		|flat|
+		flat := processedForExport byPackage values flattened.
+		flat do: [:item | item optimizeTypes ].
+		processedForExport pruneToSingleType; pruneToTop25p.
+		^ results := (flat select: [:item |  (item returnsInfo) isNotEmpty]) collect: [:item | { item package . item receiverClass name . item methodSelector . item returnsInfo first returnClass name }]. 
+			]
+		  ifEmpty: [ ^ OrderedCollection new ]
+	
+]
+
+{ #category : 'as yet unclassified' }
+HypheReturnsCollectorMethodNodes class >> tier [
+
+	^ #observation
+]
+
 { #category : 'initialization' }
 HypheReturnsCollectorMethodNodes >> initialize [
     super initialize.

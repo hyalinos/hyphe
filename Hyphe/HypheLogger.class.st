@@ -1,9 +1,9 @@
 Class {
 	#name : 'HypheLogger',
 	#superclass : 'Object',
-	#category : 'Hyphe-Tool',
+	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
-	#tag : 'Tool'
+	#tag : 'Injection'
 }
 
 { #category : 'streaming' }
@@ -15,7 +15,7 @@ Transcript cr
 { #category : 'accessing' }
 HypheLogger class >> enabled [
 "change this to true or false to enable or disable Transcript logging"
-^false
+^true
 ]
 
 { #category : 'streaming' }

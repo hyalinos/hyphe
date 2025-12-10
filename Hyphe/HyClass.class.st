@@ -26,6 +26,12 @@ HyClass class >> fromJsonDictionary: aDict [
 	^ instance
 ]
 
+{ #category : 'visiting' }
+HyClass >> accept: visitor [
+
+	methods do: [:m | visitor visitMethod: m  ]
+]
+
 { #category : 'adding' }
 HyClass >> addMethod: methodObj [
 
@@ -144,8 +150,8 @@ HyClass >> updateMethod: newMethod [
 	| oldMethod |
 	
 	oldMethod := self getMethodNamed: (newMethod name).
-	(oldMethod equals: newMethod) ifFalse: [ 
-		oldMethod updateParameters: newMethod parameters.
+	(oldMethod = newMethod) ifFalse: [ 
+		"oldMethod updateParameters: newMethod parameters."
 		oldMethod updataReturnTypes: newMethod returnTypes.
 	]
 ]

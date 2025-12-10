@@ -133,13 +133,12 @@ InferenceResultsExporter >> findOrCreatePackage: packageName [
     | package |
     package := hyDataRepresentation packages 
         detect: [ :pkg | pkg name = packageName ]
-        ifNone: [ nil ].
-    
-    package ifNil: [
-        package := HyPackage new 
+        ifNone: [ HyPackage new 
             name: packageName;
-            yourself.
-        hyDataRepresentation addPackage: package ].
+            yourself ].
+    
+
+    hyDataRepresentation addPackage: package.
     
     ^ package
 ]

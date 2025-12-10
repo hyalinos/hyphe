@@ -4,9 +4,9 @@ Class {
 	#instVars : [
 		'store'
 	],
-	#category : 'Hyphe-StaticInference',
+	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
-	#tag : 'StaticInference'
+	#tag : 'Injection'
 }
 
 { #category : 'resolving' }

@@ -41,6 +41,15 @@ HyType >> asJsonDictionary [
     ^ dict
 ]
 
+{ #category : 'comparing' }
+HyType >> equals: type [
+
+	(type class = self class) ifFalse: [ ^ false ].
+	(type source = source) ifFalse: [ ^ false ].
+	(type name = name) ifFalse: [ ^ false ].
+	^ true.
+]
+
 { #category : 'accessing' }
 HyType >> name [
 
