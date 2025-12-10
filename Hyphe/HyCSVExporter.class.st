@@ -31,7 +31,7 @@ HyCSVExporter class >> exportToStream: aStream data: anOrderedCollection [
 	
 	| writer |
 	writer := (NeoCSVWriter on: aStream)
-		fieldWriter: #quoted;
+		fieldWriter: #raw;
 		lineEndConvention: #crlf;
 		yourself.
 	
