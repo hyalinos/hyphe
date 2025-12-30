@@ -21,11 +21,11 @@ Class {
 		'restoreDefaultButton',
 		'runButton',
 		'cancelButton',
-		'toolsData',
 		'strategyLabel',
 		'strategy',
 		'strategyDropList',
-		'restoreButton'
+		'restoreButton',
+		'toolsData'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
@@ -50,11 +50,10 @@ HyInferencePresenter >> addSelectedPackages [
 HyInferencePresenter >> applyCurrentStrategy [
 
 	| current |
-	current := InferenceSettings mergeStrategy ifNil: [
-		           InferenceSettings defaultMergeStrategy ].
+	current := InferenceSettings user mergeStrategy.
 
 	strategy := current.
-	strategyLabel label: 'Merge strategy: ' , current prettyName.
+	strategyLabel label: 'Merge strategy: ' , current strategyName.
 
 	(strategyDropList items includes: current) ifTrue: [
 		strategyDropList selectItem: current ]
@@ -155,7 +154,6 @@ HyInferencePresenter >> getAllPackages [
 HyInferencePresenter >> initialize [
 
 	super initialize.
-	self initializeToolsData. 
 	self updateToolsTable.
 ]
 
@@ -192,18 +190,18 @@ HyInferencePresenter >> initializePresenters [
 	toolsTable
 		addColumn: (SpStringTableColumn new
 				 title: 'Name';
-				 evaluated: [ :item | item at: 1 ];
+				 evaluated: [ :item | item name ];
 				 yourself);
 		addColumn: (SpStringTableColumn new
 				 title: 'Confidence score';
-				 evaluated: [ :item | (item at: 2) asString ];
+				 evaluated: [ :item | (item confidence) asString ];
 				 yourself);
 		addColumn: (SpStringTableColumn new
 				 title: 'Level';
-				 evaluated: [ :item | item at: 3 ];
+				 evaluated: [ :item | item level ];
 				 yourself);
 		beMultipleSelection.
-	toolsTable items: toolsData.
+	toolsTable items: InferenceSettings user inferenceTools .
 
 	selectAllCheckbox := self newCheckBox.
 	selectAllCheckbox
@@ -242,27 +240,18 @@ HyInferencePresenter >> initializePresenters [
 	strategyDropList := self newDropList.
 	restoreButton := self newButton.
 
-	"Configure the drop list with the strategies from the model"
 	strategyDropList
-		items: ((InferenceSettings mergeStrategies) collect: [:s | s prettyName ]);
+		items: ((InferenceSettings user mergeStrategies) collect: [:s | s strategyName ]);
 		whenSelectionChangedDo: [ :selection | 
 				| newStrategy |
 				newStrategy := selection selectedItem model.
 				newStrategy ifNotNil: [ self strategyChangedTo: newStrategy ] ].
 
-	"Configure the restore button"
 	restoreButton
 		label: 'Restore to default';
 		action: [ self restoreDefaultStrategy ].
 
-	"Initialize UI from model"
 	self applyCurrentStrategy
-]
-
-{ #category : 'initialization' }
-HyInferencePresenter >> initializeToolsData [ 
-
-	toolsData := InferenceSettings joinData.
 ]
 
 { #category : 'initialization' }
@@ -342,17 +331,17 @@ HyInferencePresenter >> runInference [
 { #category : 'initialization' }
 HyInferencePresenter >> strategyChangedTo: aStrategy [
 
-	aStrategy isClass
-		ifTrue: [
-				strategyLabel label: 'Merge strategy: ' , aStrategy prettyName.
-				strategy = aStrategy]
+	aStrategy isString 
 		ifFalse: [
-				strategy := InferenceSettings getStrategyByName: aStrategy.  
+				strategyLabel label: 'Merge strategy: ' , aStrategy strategyName.
+				strategy = aStrategy]
+		ifTrue: [
+				strategy := (InferenceSettings user mergeStrategies select: [ :s | s strategyName = aStrategy ]) first .  
 				strategyLabel label: 'Merge strategy: ' , aStrategy ]
 ]
 
 { #category : 'initialization' }
 HyInferencePresenter >> updateToolsTable [ 
 	
-	toolsTable items: toolsData
+	toolsTable items: InferenceSettings user inferenceTools 
 ]

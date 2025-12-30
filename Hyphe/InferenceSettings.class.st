@@ -1,251 +1,159 @@
 "
 This class stores all information related to inference settings:
 
-	- Tools inference confidence
-	- Confidence range
-	- Tools display names to class names
-	- Repositories subscribed for analysis
+	- List of the available inference tools
+	- Inference confidence levels
+	- List of available merging strategies
+	- Repositories subscribed for automatic inference
 "
 Class {
 	#name : 'InferenceSettings',
 	#superclass : 'Object',
-	#classInstVars : [
-		'inferenceTools',
-		'inferenceConfidence',
-		'joinData',
-		'subscribedRepositories',
-		'toolNameToClass',
-		'defaultMergeStrategy',
-		'mergeStrategies',
+	#instVars : [
+		'repositoriesManager',
 		'mergeStrategy',
-		'monitorAllNewRepositories'
+		'inferenceTools',
+		'confidenceManager',
+		'mergeStrategies'
+	],
+	#classInstVars : [
+		'defaultInferenceTools',
+		'defaultConfidenceManager',
+		'defaultMergeStrategy',
+		'defaultMergeStrategies',
+		'user'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
 	#tag : 'Inference'
 }
 
-{ #category : 'adding' }
-InferenceSettings class >> addSubscribedRepositories: repoList [
-
-	subscribedRepositories addAll: repoList
-]
-
-{ #category : 'adding' }
-InferenceSettings class >> addSubscribedRepository: repo [
-
-	subscribedRepositories add: repo
-]
-
 { #category : 'confidence' }
-InferenceSettings class >> defaultConfidence [ 
+InferenceSettings class >> defaultConfidenceManager [
 
-	^ Dictionary new 
-		  at: 'Low' put: #(0.0 0.6);
-		  at: 'Medium' put: #(0.61  0.8);
-		  at: 'High' put: #(0.81 1.0);
-		  yourself
+	^ defaultConfidenceManager
+	
+]
+
+{ #category : 'tools' }
+InferenceSettings class >> defaultInferenceTools [ 
+
+	^ defaultInferenceTools 
+]
+
+{ #category : 'mergeStrategies' }
+InferenceSettings class >> defaultMergeStrategies [
+
+	^ defaultMergeStrategies
 ]
 
 { #category : 'mergeStrategies' }
 InferenceSettings class >> defaultMergeStrategy [
 
-	^ HyWeightedVotingStrategy
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> defaultMergeStrategy: anObject [
-
-	defaultMergeStrategy := anObject
-]
-
-{ #category : 'tools' }
-InferenceSettings class >> defaultTools [ 
-
-	^ OrderedCollection new
-		add: {'AST-based inference' . '1.0'};
-		add: {'Type Info Tools'. '0.8'};
-		add: {'Name-based Heuristics'. '0.5'};
-		add: {'Offline Test Profiling'. '0.6'};
-		yourself
-]
-
-{ #category : 'mergeStrategies' }
-InferenceSettings class >> getStrategyByName: aStrategy [
-
-	|className prettyName|
-	className := self mergeStrategies select: [ :o | o name = aStrategy ].
-	className ifNotEmpty: [ ^ className first ].
-	prettyName := self mergeStrategies select: [ :o |
-		              o prettyName = aStrategy ].
-	prettyName ifNotEmpty: [ ^ prettyName first ]
-]
-
-{ #category : 'confidence' }
-InferenceSettings class >> inferenceConfidence [
-
-	^ inferenceConfidence
-]
-
-{ #category : 'confidence' }
-InferenceSettings class >> inferenceConfidence: aConfidence [
-
-	inferenceConfidence := aConfidence 
-]
-
-{ #category : 'tools' }
-InferenceSettings class >> inferenceTools [
-
-	^ inferenceTools
-]
-
-{ #category : 'tools' }
-InferenceSettings class >> inferenceTools: data [
-
-	inferenceTools := data
+	^ defaultMergeStrategy 
 ]
 
 { #category : 'class initialization' }
 InferenceSettings class >> initialize [
 
-	inferenceConfidence := self defaultConfidence.
-	inferenceTools := self defaultTools.
-	mergeStrategy := defaultMergeStrategy.
-	monitorAllNewRepositories := false.
-	self recalculate.
+	<script>
+	self initializeGlobalSettings.
+	self initializeUserSettings.
+]
+
+{ #category : 'initialization' }
+InferenceSettings class >> initializeConfidenceLevels [	
 	
-	subscribedRepositories := OrderedCollection new.
-	toolNameToClass := Dictionary new
-		                   at: 'AST-based inference' put: TypeMeConfident;
-		                   at: 'Type Info Tools'
-		                   put: TITMethodReturnTypesGatherer;
-		                   at: 'Name-based Heuristics' put: TypeMeNameBased;
-								at: 'Offline Test Profiling' put: HypheReturnsCollectorMethodNodes;
-								yourself.
+	defaultConfidenceManager := HyConfidenceManager 
+
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> initializeGlobalSettings [
+
+	self initializeConfidenceLevels.
+	self initializeInferenceTools.
+	self initializeMergingStrategies.
+]
+
+{ #category : 'initialization' }
+InferenceSettings class >> initializeInferenceTools [
+	
+	defaultInferenceTools := OrderedCollection new
+		add: (HyInferenceTool new name: 'AST-based inference'; clazz: TypeMeConfident; defaultConfidence: '1.0'; confidence: '1.0'; level: (HyConfidenceManager getLevelByScore: '1.0'); yourself);
+		add: (HyInferenceTool new name: 'Type Info Tools'; clazz: TITMethodReturnTypesGatherer; defaultConfidence: '0.8'; confidence: '0.8'; level: (HyConfidenceManager getLevelByScore: '0.8');yourself);
+		add: (HyInferenceTool new name: 'Name-based Heuristics'; clazz: TypeMeNameBased; defaultConfidence: '0.5'; confidence: '0.5'; level: (HyConfidenceManager getLevelByScore: '0.5');yourself);
+		add: (HyInferenceTool new name: 'Offline Test Profiling'; clazz: HypheReturnsCollectorMethodNodes; defaultConfidence: '0.6'; confidence: '0.6'; level: (HyConfidenceManager getLevelByScore: '0.6');yourself);
+		yourself.
+
+
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> initializeMergingStrategies [
+
+	defaultMergeStrategy := HyTieredStrategy new.
+	
+	defaultMergeStrategies := OrderedCollection new 
+		add: HyConsensusStrategy new;
+		add: HyBiasedConsensusStrategy new;
+		add: defaultMergeStrategy;
+		add: HyWeightedVotingStrategy new;
+		add: HyBiasedWeightedVotingStrategy new; 
+		yourself.
+	
+	 
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> initializeUserSettings [
+
+	user := self new.
+]
+
+{ #category : 'class initialization' }
+InferenceSettings class >> user [ 
+
+	^ user
 ]
 
 { #category : 'accessing' }
-InferenceSettings class >> joinData [
+InferenceSettings >> inferenceTools [
 
-	^ joinData
+	^ inferenceTools
 ]
 
 { #category : 'accessing' }
-InferenceSettings class >> joinData: anObject [
+InferenceSettings >> initialize [
 
-	joinData := anObject
+	mergeStrategies := self class defaultMergeStrategies.
+	mergeStrategy := self class defaultMergeStrategy.
+	confidenceManager := self class defaultConfidenceManager user.
+	inferenceTools := self class defaultInferenceTools.
+	repositoriesManager := HyRepositoriesManager new. 
+]
+
+{ #category : 'accessing' }
+InferenceSettings >> mergeStrategies [
+
+	^ mergeStrategies
 ]
 
 { #category : 'mergeStrategies' }
-InferenceSettings class >> mergeStrategies [
-
-	^ { HyConsensusStrategy . HyTieredStrategy . HyWeightedVotingStrategy . HyBiasedConsensusStrategy . HyBiasedWeightedVotingStrategy}
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> mergeStrategies: anObject [
-
-	mergeStrategies := anObject
-]
-
-{ #category : 'mergeStrategies' }
-InferenceSettings class >> mergeStrategy [
+InferenceSettings >> mergeStrategy [
 
 	^ mergeStrategy
 ]
 
 { #category : 'mergeStrategies' }
-InferenceSettings class >> mergeStrategy: anObject [
+InferenceSettings >> mergeStrategy: aHyMergingStrategy [
 
-	| className prettyName|
-	
-	(self mergeStrategies includes: anObject) ifTrue: [ mergeStrategy := anObject ].
-	className := self mergeStrategies select: [:o | o name = anObject ].
-	className ifNotEmpty: [ mergeStrategy := className first ].
-	prettyName := self mergeStrategies select: [:o | o prettyName = anObject ].
-	prettyName ifNotEmpty: [ mergeStrategy := prettyName first ].
+	mergeStrategy := aHyMergingStrategy
 	 
 ]
 
 { #category : 'accessing' }
-InferenceSettings class >> monitorAllNewRepositories [
+InferenceSettings >> repositoriesManager [
 
-	^ monitorAllNewRepositories
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> monitorAllNewRepositories: anObject [
-
-	monitorAllNewRepositories := anObject
-]
-
-{ #category : 'class initialization' }
-InferenceSettings class >> recalculate [
-	
-	joinData := self inferenceTools collect: [ :tool |
-		| toolName toolConfidence verbalConfidence |
-		toolName := tool at: 1.
-		toolConfidence := tool at: 2.
-		
-		verbalConfidence := self resolveConfidenceLevel: toolConfidence. 
-		
-		{ toolName . toolConfidence . verbalConfidence } 
-	].
-	
-	^ joinData 
-]
-
-{ #category : 'confidence' }
-InferenceSettings class >> resolveConfidenceLevel: toolConfidence [ 
-
-	self inferenceConfidence keysAndValuesDo:[:level :range |
-		| minValue maxValue |
-		
-		minValue := (range first) asNumber.
-		maxValue := (range last) asNumber.
-		(toolConfidence asNumber between: minValue and: maxValue) ifTrue: [ ^ level ]
-	].
-		
-	^ 'Unknown'.	
-	
-	
-]
-
-{ #category : 'class initialization' }
-InferenceSettings class >> restoreDefault [ 
-
-	self initialize
-]
-
-{ #category : 'class initialization' }
-InferenceSettings class >> restoreDefaultConfidenceAndTools [ 
-
-	inferenceConfidence := self defaultConfidence.
-	inferenceTools := self defaultTools.
-	self recalculate.
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> subscribedRepositories [
-
-	^ subscribedRepositories
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> subscribedRepositories: aCollection [
-
-	subscribedRepositories := aCollection 
-]
-
-{ #category : 'tools' }
-InferenceSettings class >> toolNameToClass [
-
-	^ toolNameToClass 
-		
-]
-
-{ #category : 'accessing' }
-InferenceSettings class >> toolNameToClass: anObject [
-
-	toolNameToClass := anObject
+	^ repositoriesManager
 ]

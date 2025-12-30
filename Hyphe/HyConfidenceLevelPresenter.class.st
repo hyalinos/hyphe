@@ -56,8 +56,8 @@ HyConfidenceLevelPresenter >> defaultLayout [
 HyConfidenceLevelPresenter >> initialize [
 
 	super initialize.
-	confidenceData := InferenceSettings inferenceConfidence.
-	originalData := InferenceSettings inferenceConfidence.
+	confidenceData := InferenceSettings inferenceConfidence associations.
+	originalData := InferenceSettings inferenceConfidence associations.
 	tableConf items: confidenceData. 
 ]
 
@@ -68,15 +68,15 @@ HyConfidenceLevelPresenter >> initializePresenters [
 	tableConf
 		addColumn: (SpStringTableColumn 
 			title: 'Min'
-			evaluated: [ :item | (item at: 1) asString ])
+			evaluated: [ :item | item value first asString])
 			beSortable;
 		addColumn: (SpStringTableColumn 
 			title: 'Max'
-			evaluated: [ :item | (item at: 2) asString ])
+			evaluated: [ :item | item value second asString ])
 			beSortable;
 		addColumn: (SpStringTableColumn 
 			title: 'Level'
-			evaluated: [ :item | item at: 3 ]);
+			evaluated: [ :item | item key ]);
 		beResizable.
 	
 	tableConf columns first onAcceptEdition: [ :item :newValue |
@@ -132,7 +132,7 @@ HyConfidenceLevelPresenter >> save [
 		^ self
 	].
 
-	InferenceSettings inferenceConfidence: (confidenceData collect: [ :item | item copy ] as: OrderedCollection). 
+	InferenceSettings inferenceConfidence: confidenceData asDictionary. 
 	InferenceSettings recalculate.
 	parentTable items: InferenceSettings joinData. 
 	self inform: 'Confidence levels saved successfully!'
@@ -143,6 +143,7 @@ HyConfidenceLevelPresenter >> updateMaxValue: item with: newValue [
 
 	[ 
 		| numericValue oldValue |
+		1 halt.
 		numericValue := newValue asNumber.
 		
 		(numericValue < 0.0 or: [ numericValue > 1.0 ]) ifTrue: [
@@ -172,6 +173,7 @@ HyConfidenceLevelPresenter >> updateMinValue: item with: newValue [
 
 	[ 
 		| numericValue oldValue |
+		1 halt.
 		numericValue := newValue asNumber.
 
 		(numericValue < 0.0 or: [ numericValue > 1.0 ]) ifTrue: [
@@ -180,12 +182,12 @@ HyConfidenceLevelPresenter >> updateMinValue: item with: newValue [
 		].
 		
 		"Store old value for potential rollback"
-		oldValue := item at: 1.
-		item at: 1 put: numericValue.
+		oldValue := item value at: 1.
+		item value at: 1 put: numericValue.
 		
 		"Validate no overlaps"
 		(self validateNoOverlaps) ifFalse: [
-			item at: 1 put: oldValue.
+			item value at: 1 put: oldValue.
 			tableConf refresh.
 			^ self
 		].
@@ -205,8 +207,9 @@ HyConfidenceLevelPresenter >> validateNoOverlaps [
 	"First, check that min < max for each item"
 	confidenceData do: [ :item |
 		| min max |
-		min := (item at: 1) asNumber.
-		max := (item at: 2) asNumber.
+		1 halt.
+		min := (item value at: 1) asNumber.
+		max := (item value at: 2) asNumber.
 		(min >= max) ifTrue: [
 			self inform: 'Min value must be less than Max value for each level.'.
 			^ false

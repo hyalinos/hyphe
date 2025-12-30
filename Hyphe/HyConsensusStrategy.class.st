@@ -113,7 +113,6 @@ HyConsensusStrategy >> initialize [
 
     super initialize.
     minimumSources := 2.
-	 self getToolConfidenceMap.
 ]
 
 { #category : 'initialization' }

@@ -57,7 +57,7 @@ HyMergeStrategy >> getToolConfidenceMap [
     | mapping |
     mapping := Dictionary new.
     
-    InferenceSettings inferenceTools do: [ :pair |
+    InferenceSettings user inferenceTools do: [ :pair |
         | toolName confidenceString confidenceFloat |
 
         toolName := (InferenceSettings toolNameToClass at: (pair first)) name.
@@ -82,7 +82,6 @@ HyMergeStrategy >> mergeTypes: typesCollection [
 
 { #category : 'initialization' }
 HyMergeStrategy >> strategyName [
-    "Return name of this strategy for reporting"
 
     self subclassResponsibility
 ]

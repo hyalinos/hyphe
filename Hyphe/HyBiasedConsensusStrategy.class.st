@@ -35,3 +35,9 @@ HyBiasedConsensusStrategy >> mergeTypes: typesCollection [
 	^ super mergeTypes: typesCollection.
 
 ]
+
+{ #category : 'initialization' }
+HyBiasedConsensusStrategy >> strategyName [
+
+    ^ 'Biased Consensus'
+]
