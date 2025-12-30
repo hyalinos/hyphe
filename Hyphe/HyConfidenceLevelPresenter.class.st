@@ -56,8 +56,8 @@ HyConfidenceLevelPresenter >> defaultLayout [
 HyConfidenceLevelPresenter >> initialize [
 
 	super initialize.
-	confidenceData := InferenceSettings inferenceConfidence associations.
-	originalData := InferenceSettings inferenceConfidence associations.
+	confidenceData := InferenceSettings user confidenceManager levels.
+	originalData := InferenceSettings user confidenceManager levels.
 	tableConf items: confidenceData. 
 ]
 
@@ -68,15 +68,15 @@ HyConfidenceLevelPresenter >> initializePresenters [
 	tableConf
 		addColumn: (SpStringTableColumn 
 			title: 'Min'
-			evaluated: [ :item | item value first asString])
+			evaluated: [ :item | item min asString])
 			beSortable;
 		addColumn: (SpStringTableColumn 
 			title: 'Max'
-			evaluated: [ :item | item value second asString ])
+			evaluated: [ :item | item max asString ])
 			beSortable;
 		addColumn: (SpStringTableColumn 
 			title: 'Level'
-			evaluated: [ :item | item key ]);
+			evaluated: [ :item | item name ]);
 		beResizable.
 	
 	tableConf columns first onAcceptEdition: [ :item :newValue |

@@ -3,7 +3,7 @@ Class for storing logic and data related to manipulation of ice repositories sub
 "
 Class {
 	#name : 'HyRepositoriesManager',
-	#superclass : 'Object',
+	#superclass : 'HyInferenceSettingsManager',
 	#instVars : [
 		'monitorAllNewRepositories',
 		'subscribedRepositories'

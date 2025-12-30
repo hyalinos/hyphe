@@ -3,13 +3,12 @@ Just a wrapper for confidence levels to add some logic to manipulate them
 "
 Class {
 	#name : 'HyConfidenceManager',
-	#superclass : 'Object',
+	#superclass : 'HyInferenceSettingsManager',
 	#instVars : [
 		'levels'
 	],
 	#classInstVars : [
-		'defaultLevels',
-		'user'
+		'defaultLevels'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
@@ -35,16 +34,7 @@ HyConfidenceManager class >> getLevelByScore: aScore [
 ]
 
 { #category : 'accessing' }
-HyConfidenceManager class >> initialize [ 
-
-	self initializeDefaultLevels.
-	self initializeUserSettings
-		
-	
-]
-
-{ #category : 'accessing' }
-HyConfidenceManager class >> initializeDefaultLevels [
+HyConfidenceManager class >> initializeDefaultValues [
 
 	defaultLevels := OrderedCollection new 
 		add: (HyConfidenceLevel new name: 'Low'; min: 0.0; max: 0.6; yourself);
@@ -53,20 +43,6 @@ HyConfidenceManager class >> initializeDefaultLevels [
 		yourself.
 		
 	
-]
-
-{ #category : 'accessing' }
-HyConfidenceManager class >> initializeUserSettings [
-
-	user := self new
-		
-	
-]
-
-{ #category : 'accessing' }
-HyConfidenceManager class >> user [
-
-	^ user
 ]
 
 { #category : 'as yet unclassified' }

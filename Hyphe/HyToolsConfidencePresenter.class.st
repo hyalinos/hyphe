@@ -5,13 +5,11 @@ Class {
 	#name : 'HyToolsConfidencePresenter',
 	#superclass : 'SpPresenter',
 	#instVars : [
-		'toolsData',
 		'table',
+		'parentTable',
 		'saveButton',
 		'resetButton',
-		'cancelButton',
-		'originalData',
-		'parentTable'
+		'cancelButton'
 	],
 	#category : 'Hyphe-UI',
 	#package : 'Hyphe',
@@ -29,6 +27,8 @@ HyToolsConfidencePresenter class >> openWithData: aTable [
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> cancel [
 
+	HyInferenceToolsManager reset. 
+	table items: HyInferenceToolsManager user inferenceTools.
 	self window close
 ]
 
@@ -50,9 +50,7 @@ HyToolsConfidencePresenter >> defaultLayout [
 HyToolsConfidencePresenter >> initialize [
 
 	super initialize.
-	toolsData := InferenceSettings inferenceTools.
-	originalData := InferenceSettings inferenceTools.
-	table items: toolsData. 
+	table items: HyInferenceToolsManager user inferenceTools. 
 ]
 
 { #category : 'initialization' }
@@ -62,10 +60,10 @@ HyToolsConfidencePresenter >> initializePresenters [
 	table
 		addColumn: (SpStringTableColumn 
 			title: 'Tool Name'
-			evaluated: [ :item | item first ]);
+			evaluated: [ :item | item name ]);
 		addColumn: (SpStringTableColumn 
 			title: 'Confidence Score'
-			evaluated: [ :item | (item last) asString ])
+			evaluated: [ :item | (item confidence) asString ])
 			beSortable;
 		beResizable.
 	
@@ -106,7 +104,9 @@ HyToolsConfidencePresenter >> parentTable: aTable [
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> reset [
 
-	table items: (originalData collect: [ :item | item copy ] as: OrderedCollection).
+	HyInferenceToolsManager reset. 
+	table items: HyInferenceToolsManager user inferenceTools.
+	table refresh.
 	self inform: 'Data reset to original values.'
 
 ]
@@ -114,24 +114,16 @@ HyToolsConfidencePresenter >> reset [
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> save [
 
-	InferenceSettings inferenceTools: (toolsData collect: [ :item | item copy ] as: OrderedCollection). 
-	InferenceSettings recalculate.
-	parentTable items: InferenceSettings joinData. 
-	self inform: 'Data saved successfully!'
-]
-
-{ #category : 'accessing' }
-HyToolsConfidencePresenter >> toolsData: aCollection [ 
-	toolsData := aCollection
+	HyInferenceToolsManager user recalculateConfidenceLevels. 
+	parentTable items: HyInferenceToolsManager user inferenceTools.
+	parentTable refresh. 
+	self inform: 'Data saved successfully!'.
+	self window close
 ]
 
 { #category : 'initialization' }
 HyToolsConfidencePresenter >> updateConfidenceScore: item with: newValue [
 
-[ 
-	item at: 2 put: (newValue asNumber).
-	table refresh
-] on: Error do: [ 
-	self inform: 'Invalid confidence score. Please enter a numeric value.'
-]
+	item confidence: (newValue asNumber).
+	table refresh.
 ]

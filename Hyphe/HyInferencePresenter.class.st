@@ -201,7 +201,7 @@ HyInferencePresenter >> initializePresenters [
 				 evaluated: [ :item | item level ];
 				 yourself);
 		beMultipleSelection.
-	toolsTable items: InferenceSettings user inferenceTools .
+	toolsTable items: InferenceSettings user inferenceToolsManager inferenceTools .
 
 	selectAllCheckbox := self newCheckBox.
 	selectAllCheckbox
@@ -294,8 +294,7 @@ HyInferencePresenter >> restoreDefaultStrategy [
 { #category : 'initialization' }
 HyInferencePresenter >> restoreToDefault [ 
 
-	InferenceSettings restoreDefault.
-	self initializeToolsData.
+	InferenceSettings initializeUserSettings.
 	self updateToolsTable
 
 ]
@@ -334,7 +333,7 @@ HyInferencePresenter >> strategyChangedTo: aStrategy [
 	aStrategy isString 
 		ifFalse: [
 				strategyLabel label: 'Merge strategy: ' , aStrategy strategyName.
-				strategy = aStrategy]
+				strategy := aStrategy]
 		ifTrue: [
 				strategy := (InferenceSettings user mergeStrategies select: [ :s | s strategyName = aStrategy ]) first .  
 				strategyLabel label: 'Merge strategy: ' , aStrategy ]
@@ -343,5 +342,5 @@ HyInferencePresenter >> strategyChangedTo: aStrategy [
 { #category : 'initialization' }
 HyInferencePresenter >> updateToolsTable [ 
 	
-	toolsTable items: InferenceSettings user inferenceTools 
+	toolsTable items: InferenceSettings user inferenceToolsManager inferenceTools 
 ]

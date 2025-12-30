@@ -12,16 +12,16 @@ Class {
 	#instVars : [
 		'repositoriesManager',
 		'mergeStrategy',
-		'inferenceTools',
+		'inferenceToolsManager',
 		'confidenceManager',
 		'mergeStrategies'
 	],
 	#classInstVars : [
-		'defaultInferenceTools',
 		'defaultConfidenceManager',
 		'defaultMergeStrategy',
 		'defaultMergeStrategies',
-		'user'
+		'user',
+		'defaultInferenceToolsManager'
 	],
 	#category : 'Hyphe-Inference',
 	#package : 'Hyphe',
@@ -36,9 +36,9 @@ InferenceSettings class >> defaultConfidenceManager [
 ]
 
 { #category : 'tools' }
-InferenceSettings class >> defaultInferenceTools [ 
+InferenceSettings class >> defaultInferenceToolsManager [ 
 
-	^ defaultInferenceTools 
+	^ defaultInferenceToolsManager 
 ]
 
 { #category : 'mergeStrategies' }
@@ -57,7 +57,7 @@ InferenceSettings class >> defaultMergeStrategy [
 InferenceSettings class >> initialize [
 
 	<script>
-	self initializeGlobalSettings.
+	self initializeGlobalValues.
 	self initializeUserSettings.
 ]
 
@@ -69,7 +69,7 @@ InferenceSettings class >> initializeConfidenceLevels [
 ]
 
 { #category : 'class initialization' }
-InferenceSettings class >> initializeGlobalSettings [
+InferenceSettings class >> initializeGlobalValues [
 
 	self initializeConfidenceLevels.
 	self initializeInferenceTools.
@@ -78,15 +78,10 @@ InferenceSettings class >> initializeGlobalSettings [
 
 { #category : 'initialization' }
 InferenceSettings class >> initializeInferenceTools [
+
+	defaultInferenceToolsManager := HyInferenceToolsManager 
 	
-	defaultInferenceTools := OrderedCollection new
-		add: (HyInferenceTool new name: 'AST-based inference'; clazz: TypeMeConfident; defaultConfidence: '1.0'; confidence: '1.0'; level: (HyConfidenceManager getLevelByScore: '1.0'); yourself);
-		add: (HyInferenceTool new name: 'Type Info Tools'; clazz: TITMethodReturnTypesGatherer; defaultConfidence: '0.8'; confidence: '0.8'; level: (HyConfidenceManager getLevelByScore: '0.8');yourself);
-		add: (HyInferenceTool new name: 'Name-based Heuristics'; clazz: TypeMeNameBased; defaultConfidence: '0.5'; confidence: '0.5'; level: (HyConfidenceManager getLevelByScore: '0.5');yourself);
-		add: (HyInferenceTool new name: 'Offline Test Profiling'; clazz: HypheReturnsCollectorMethodNodes; defaultConfidence: '0.6'; confidence: '0.6'; level: (HyConfidenceManager getLevelByScore: '0.6');yourself);
-		yourself.
-
-
+	
 ]
 
 { #category : 'class initialization' }
@@ -118,9 +113,15 @@ InferenceSettings class >> user [
 ]
 
 { #category : 'accessing' }
-InferenceSettings >> inferenceTools [
+InferenceSettings >> confidenceManager [
 
-	^ inferenceTools
+	^ confidenceManager
+]
+
+{ #category : 'accessing' }
+InferenceSettings >> inferenceToolsManager [
+
+	^ inferenceToolsManager
 ]
 
 { #category : 'accessing' }
@@ -129,7 +130,7 @@ InferenceSettings >> initialize [
 	mergeStrategies := self class defaultMergeStrategies.
 	mergeStrategy := self class defaultMergeStrategy.
 	confidenceManager := self class defaultConfidenceManager user.
-	inferenceTools := self class defaultInferenceTools.
+	inferenceToolsManager := self class defaultInferenceToolsManager user.
 	repositoriesManager := HyRepositoriesManager new. 
 ]
 
