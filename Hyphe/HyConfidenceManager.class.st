@@ -46,23 +46,44 @@ HyConfidenceManager class >> initializeDefaultValues [
 ]
 
 { #category : 'as yet unclassified' }
+HyConfidenceManager class >> validateNoOverlaps: data [
+
+	^ ((data flatCollect: [ :obj | { obj min . obj max } ]) "get list of min1, max1, min2, ..."
+		overlappingPairsCollect: [ :a :b | a > b ]) "check if any numbers overlap"
+			noneSatisfy: [ :each | each ] "hope that they are not"
+	
+
+	
+]
+
+{ #category : 'as yet unclassified' }
 HyConfidenceManager >> getLevelByScore: aScore [
 
-	| level |
+	| level aNumber |
+	
+	aNumber := aScore asNumber. 
 	level := levels select: [ :l |
-		         l min <= aScore and: l max >= aScore ].
-	level isNotEmpty ifTrue: [ ^ level name ].
+		         l min <= aNumber and: l max >= aNumber ].
+	level isNotEmpty ifTrue: [ ^ level first name ].
 	^ 'undefined'
 ]
 
 { #category : 'as yet unclassified' }
 HyConfidenceManager >> initialize [ 
 
-	levels := self class defaultLevels 
+	levels := self class defaultLevels deepCopy
 ]
 
 { #category : 'accessing' }
 HyConfidenceManager >> levels [
 
 	^ levels
+]
+
+{ #category : 'accessing' }
+HyConfidenceManager >> updateLevels: data [
+
+	levels := data
+
+	
 ]

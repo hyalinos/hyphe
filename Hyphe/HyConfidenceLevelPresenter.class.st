@@ -10,7 +10,6 @@ Class {
 		'saveButton',
 		'resetButton',
 		'cancelButton',
-		'originalData',
 		'parentTable'
 	],
 	#category : 'Hyphe-UI',
@@ -56,9 +55,7 @@ HyConfidenceLevelPresenter >> defaultLayout [
 HyConfidenceLevelPresenter >> initialize [
 
 	super initialize.
-	confidenceData := InferenceSettings user confidenceManager levels.
-	originalData := InferenceSettings user confidenceManager levels.
-	tableConf items: confidenceData. 
+	self initializeTableData
 ]
 
 { #category : 'initialization' }
@@ -104,6 +101,14 @@ HyConfidenceLevelPresenter >> initializePresenters [
 ]
 
 { #category : 'initialization' }
+HyConfidenceLevelPresenter >> initializeTableData [
+
+	confidenceData := HyConfidenceManager user levels deepCopy.
+	tableConf items: confidenceData.
+	tableConf refresh
+]
+
+{ #category : 'initialization' }
 HyConfidenceLevelPresenter >> initializeWindow: aWindowPresenter [
 
 	aWindowPresenter
@@ -120,116 +125,63 @@ HyConfidenceLevelPresenter >> parentTable: anObject [
 { #category : 'initialization' }
 HyConfidenceLevelPresenter >> reset [
 
-	tableConf items: (originalData collect: [ :item | item copy ] as: OrderedCollection).
-	self inform: 'Data reset to original values.'
+	HyConfidenceManager reset.
+	confidenceData := HyConfidenceManager user levels deepCopy.
+	tableConf items: confidenceData.
+	tableConf refresh
 ]
 
 { #category : 'initialization' }
 HyConfidenceLevelPresenter >> save [
 
-	self validateNoOverlaps ifFalse: [
-		self inform: 'Cannot save: There are overlapping ranges or invalid values. Please fix the errors first.'.
-		^ self
-	].
-
-	InferenceSettings inferenceConfidence: confidenceData asDictionary. 
-	InferenceSettings recalculate.
-	parentTable items: InferenceSettings joinData. 
-	self inform: 'Confidence levels saved successfully!'
+	(HyConfidenceManager validateNoOverlaps: confidenceData) ifTrue: [
+		HyConfidenceManager user updateLevels: confidenceData.
+		HyInferenceToolsManager user recalculateConfidenceLevels.
+		parentTable refresh.
+		self inform: 'Confidence levels saved successfully!'.
+		self window close]
+	ifFalse: [ 
+		self inform: 'Can not save data. Confidence levels are overlapping.'.	
+		 ]
 ]
 
 { #category : 'initialization' }
 HyConfidenceLevelPresenter >> updateMaxValue: item with: newValue [
+ 
+		| numericValue |
 
-	[ 
-		| numericValue oldValue |
-		1 halt.
 		numericValue := newValue asNumber.
-		
-		(numericValue < 0.0 or: [ numericValue > 1.0 ]) ifTrue: [
-			self inform: 'Max value must be between 0.0 and 1.0'.
-			^ self
-		].
-		
-		"Store old value for potential rollback"
-		oldValue := item at: 2.
-		item at: 2 put: numericValue.
-		
-		"Validate no overlaps"
-		(self validateNoOverlaps) ifFalse: [
-			item at: 2 put: oldValue.
+		(self valueInRanges: numericValue) 
+		ifTrue: [ 
+			item max: numericValue.
 			tableConf refresh.
-			^ self
-		].
-		
-		tableConf refresh
-	] on: Error do: [ 
-		self inform: 'Invalid max value. Please enter a numeric value between 0.0 and 1.0.'
-	]
+			 ] 
+		ifFalse: [ 
+			self inform: 'Min value must be between 0.0 and 1.0'.
+			 ].
+	
 ]
 
 { #category : 'initialization' }
 HyConfidenceLevelPresenter >> updateMinValue: item with: newValue [
+ 
+		| numericValue |
 
-	[ 
-		| numericValue oldValue |
-		1 halt.
 		numericValue := newValue asNumber.
-
-		(numericValue < 0.0 or: [ numericValue > 1.0 ]) ifTrue: [
-			self inform: 'Min value must be between 0.0 and 1.0'.
-			^ self
-		].
-		
-		"Store old value for potential rollback"
-		oldValue := item value at: 1.
-		item value at: 1 put: numericValue.
-		
-		"Validate no overlaps"
-		(self validateNoOverlaps) ifFalse: [
-			item value at: 1 put: oldValue.
+		(self valueInRanges: numericValue) 
+		ifTrue: [ 
+			item min: numericValue.
 			tableConf refresh.
-			^ self
-		].
-		
-		tableConf refresh
-	] on: Error do: [ 
-		self inform: 'Invalid min value. Please enter a numeric value between 0.0 and 1.0.'
-	]
+			 ] 
+		ifFalse: [ 
+			self inform: 'Min value must be between 0.0 and 1.0'.
+			 ].
+	
 ]
 
 { #category : 'initialization' }
-HyConfidenceLevelPresenter >> validateNoOverlaps [
-
-	| sortedData |"
-	Validate that ranges don't overlap and min < max for each item"
-	
-	"First, check that min < max for each item"
-	confidenceData do: [ :item |
-		| min max |
-		1 halt.
-		min := (item value at: 1) asNumber.
-		max := (item value at: 2) asNumber.
-		(min >= max) ifTrue: [
-			self inform: 'Min value must be less than Max value for each level.'.
-			^ false
-		]
-	].
-	
-	"""Sort by min value to check for overlaps""
-	
-	sortedData := confidenceData sorted: [ :a :b | (a at: 1) < (b at: 1) ].
-	
-	""Check that max of one range is less than or equal to min of next range""
-	1 to: sortedData size - 1 do: [ :i |
-		| currentMax nextMin |
-		currentMax := (sortedData at: i) at: 2.
-		nextMin := (sortedData at: i + 1) at: 1.
-		(currentMax > nextMin) ifTrue: [
-			self inform: 'Confidence ranges cannot overlap. Max value in one category must be less than or equal to Min value in the next category.'.
-			^ false
-		]
-	]."
-	
-	^ true
+HyConfidenceLevelPresenter >> valueInRanges: value [
+ 
+	^ (value < 0.0 or: (value > 1.0 )) not
+		
 ]

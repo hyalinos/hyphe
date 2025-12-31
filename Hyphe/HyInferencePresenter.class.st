@@ -294,7 +294,7 @@ HyInferencePresenter >> restoreDefaultStrategy [
 { #category : 'initialization' }
 HyInferencePresenter >> restoreToDefault [ 
 
-	InferenceSettings initializeUserSettings.
+	InferenceSettings initialize.
 	self updateToolsTable
 
 ]

@@ -47,5 +47,5 @@ HyInferenceToolsManager >> initialize [
 { #category : 'initialization' }
 HyInferenceToolsManager >> recalculateConfidenceLevels [
 
-	inferenceTools do: [:t | t level: (HyConfidenceManager getLevelByScore: (t confidence)) ]
+	inferenceTools do: [:t | t level: (HyConfidenceManager user getLevelByScore: (t confidence)) ]
 ]
