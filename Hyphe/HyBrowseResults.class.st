@@ -78,7 +78,7 @@ HyBrowseResults >> initializeWindow: aWindowPresenter [
 
 	super initializeWindow: aWindowPresenter.
 	aWindowPresenter
-		title: 'Confidence level configuration';
+		title: 'Type Inference Results';
 		initialExtent: 800 @ 300.
 	table items: data
 ]
