@@ -113,7 +113,7 @@ HypheIcebergEventHandler class >> onRepositoryCommited: ann [
 	self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages.
 	repo := ann repository.
 	((subscribed at: repo ifAbsent: [^ false ]) at: #onCommit) ifTrue: [
-		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
+		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (HyInferenceToolsManager user inferenceTools collect: #clazz)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
 		Mycelium addResults: results.
 		].
 	
@@ -141,7 +141,7 @@ ann repository ifNotNil: [
         Transcript cr ]"
 
 
-InferenceSettings addSubscribedRepository: (ann repository).
+HyRepositoriesManager user addSubscribedRepository: (ann repository).
 self generateBasicSettingsAndAdd: (ann repository).
 
 self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
@@ -169,7 +169,7 @@ ann repository ifNotNil: [
         Transcript cr ]"
 
 subscribed removeKey: (ann repository) ifAbsent: [  ].
-InferenceSettings subscribedRepositories remove: (ann repository).
+HyRepositoriesManager user subscribedRepositories remove: (ann repository).
 
 self onRepositoryChange: ann repository packages: ann repository workingCopy packages loadedPackages: ann repository loadedPackages 
 ]
@@ -190,7 +190,7 @@ HypheIcebergEventHandler class >> onRepositoryPushed: ann [
 	
 	repo := ann repository.
 	((subscribed at: repo ifAbsent: [ ]) at: #onPush) ifTrue: [ 
-		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: (InferenceSettings toolNameToClass values)  mergeStrategy: (InferenceSettings defaultMergeStrategy).
+		results := InferenceExecutor executeWithPackages: (repo loadedPackages) tools: ((HyInferenceToolsManager user inferenceTools collect: #clazz))  mergeStrategy: (InferenceSettings defaultMergeStrategy).
 		Mycelium addResults: results.
 	]. 
 ]

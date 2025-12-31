@@ -119,7 +119,7 @@ HyRepositorySubscriptionPresenter >> initializePresenters [
 		                  yourself.
 
 	selectedRepositoryList := self newList
-										 items: (InferenceSettings subscribedRepositories); 
+										 items: (HyRepositoriesManager user subscribedRepositories); 
 		                          display: [ :repo | repo name ];
 		                          yourself.
 	addButton := self newButton
@@ -174,7 +174,7 @@ HyRepositorySubscriptionPresenter >> initializePresenters [
 		                          yourself.
 	subscribeAllCheckbox := self newCheckBox
 		                        label: 'Subscribe all future repositories';
-										state: InferenceSettings monitorAllNewRepositories;
+										state: HyRepositoriesManager user monitorAllNewRepositories;
 		                        yourself.
 	saveButton := self newButton
 		              label: 'Save';
@@ -198,7 +198,7 @@ HyRepositorySubscriptionPresenter >> initializeWindow: aWindowPresenter [
 { #category : 'layout' }
 HyRepositorySubscriptionPresenter >> loadIcebergRepositories [ 
 	
-	^ IceRepository registry reject: [:r | InferenceSettings subscribedRepositories includes: r ]
+	^ IceRepository registry reject: [:r | HyRepositoriesManager user subscribedRepositories includes: r ]
 
 
 ]
@@ -226,8 +226,8 @@ HyRepositorySubscriptionPresenter >> onCancel [
 HyRepositorySubscriptionPresenter >> onClearRepositories [ 
 
 	selectedRepositoryList items: #().
-	InferenceSettings subscribedRepositories: OrderedCollection new.
-	HypheIcebergEventHandler subscribed: OrderedCollection new.
+	HyRepositoriesManager user clearRepositories.
+	HypheIcebergEventHandler subscribed: Dictionary new.
 
 ]
 
@@ -252,8 +252,8 @@ HyRepositorySubscriptionPresenter >> onSave [
 	config at: #onPackageAdded put: packageAddedCheckbox state.
 	config at: #onPackageRemoved put: packageRemovedCheckbox state.
 		
-	(subscribeAllCheckbox state) ifTrue: [ InferenceSettings monitorAllNewRepositories: true ] ifFalse: [InferenceSettings monitorAllNewRepositories: false ].
-	InferenceSettings subscribedRepositories: (selectedRepositoryList items). 
+	(subscribeAllCheckbox state) ifTrue: [ HyRepositoriesManager user monitorAllNewRepositories: true ] ifFalse: [HyRepositoriesManager user monitorAllNewRepositories: false ].
+	HyRepositoriesManager user addSubscribedRepositories: (selectedRepositoryList items). 
 	
 	HypheIcebergEventHandler addRepositories: ((selectedRepositoryList items) collect: [:item | item -> config]).
 	

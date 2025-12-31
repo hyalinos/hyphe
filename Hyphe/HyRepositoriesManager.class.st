@@ -13,6 +13,12 @@ Class {
 	#tag : 'Inference'
 }
 
+{ #category : 'initialization' }
+HyRepositoriesManager class >> initializeDefaultValues [ 
+
+	
+]
+
 { #category : 'repositories' }
 HyRepositoriesManager >> addSubscribedRepositories: repoList [
 
@@ -28,7 +34,7 @@ HyRepositoriesManager >> addSubscribedRepository: repo [
 { #category : 'repositories' }
 HyRepositoriesManager >> clearRepositories [
 
-	subscribedRepositories clear
+	subscribedRepositories := OrderedCollection new
 ]
 
 { #category : 'initialization' }
