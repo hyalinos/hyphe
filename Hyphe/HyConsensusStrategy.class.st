@@ -30,7 +30,7 @@ HyConsensusStrategy >> applyNoisyOR: confidences [
     "Calculate product of (1 - confidence) for all confidences"
     product := 1.0.
     confidences do: [ :conf |
-        product := product * (1.0 - conf).
+        product := product * (1.0 - conf asNumber).
     ].
     
     "Apply noisy-OR: 1 - product"

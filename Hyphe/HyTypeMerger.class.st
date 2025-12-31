@@ -166,7 +166,7 @@ HyTypeMerger >> mergeForObject: anObject withTypes: typesCollection [
 			anObject confidence: 0.0.
 			^ self ].
 
-	str := strategy new tools: tools.
+	str := strategy tools: tools.
 	^ str mergeTypes: typesCollection
 ]
 
@@ -209,7 +209,7 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 			 at: #confidence put: (result at: #confidence);
 			 at: #level
 			 put:
-				 (InferenceSettings resolveConfidenceLevel:
+				 (HyConfidenceManager user getLevelByScore:
 						  (result at: #confidence));
 			 at: #sources put: (result at: #sources);
 			 "at: #reasoning put: (result at: #reasoning);"
@@ -224,7 +224,7 @@ HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 		 types: (result at: #types);
 		 confidenceScore: (result at: #confidence);
 		 confidenceLevel: 
-				 (InferenceSettings resolveConfidenceLevel:
+				 (HyConfidenceManager user getLevelByScore:
 						  (result at: #confidence));
 		sources: (result at: #sources);
 		yourself).

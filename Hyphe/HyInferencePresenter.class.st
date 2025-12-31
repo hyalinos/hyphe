@@ -306,9 +306,7 @@ HyInferencePresenter >> runInference [
 
 	| selectedPkgs results |
 	selectedPkgs := selectedPackageList items.
-	selectedTools := (toolsTable selectedItems collect: [ :t | t at: 1 ])
-		                 collect: [ :t |
-		                 InferenceSettings toolNameToClass at: t ].
+	selectedTools := toolsTable selectedItems collect: [ :t | t clazz ].
 
 	selectedPkgs ifEmpty: [
 		^ self inform: 'Please select at least one package' ].

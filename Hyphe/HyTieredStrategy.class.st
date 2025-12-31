@@ -89,12 +89,7 @@ HyTieredStrategy >> applyTieredAlgorithm: structural usage: usage nameHint: name
 { #category : 'as yet unclassified' }
 HyTieredStrategy >> categoryForSource: source [
 
-	| className|
-	
-	className := tools select: [ :o | o name = source ].
-	className ifNotEmpty: [ ^ className first tier ].
-	
-	^ (InferenceSettings toolNameToClass at: source) tier.   
+	^ (HyConfidenceManager getClassByName: source) tier
     
 ]
 

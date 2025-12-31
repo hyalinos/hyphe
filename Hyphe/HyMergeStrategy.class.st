@@ -3,8 +3,7 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'mergeResults',
-		'tools',
-		'toolConfidenceMap'
+		'tools'
 	],
 	#category : 'Hyphe-Merge',
 	#package : 'Hyphe',
@@ -23,17 +22,10 @@ HyMergeStrategy >> checkForConfidentType: typesCollection [
 	^ typesCollection select: [:t | t source = #TypeMeConfident  ]
 ]
 
-{ #category : 'initialization' }
-HyMergeStrategy >> confidenceLevelFor: confidenceValue [ 
-	
-	^ InferenceSettings resolveConfidenceLevel: confidenceValue.	
-	
-]
-
 { #category : 'as yet unclassified' }
 HyMergeStrategy >> extractToolConfidence: hyType [
      
-   ^ toolConfidenceMap at: (hyType source) ifAbsent: [ 0.5 ].
+   ^ (HyConfidenceManager getToolByName: (hyType source)) confidence.
     
 ]
 
@@ -48,25 +40,6 @@ HyMergeStrategy >> extractToolConfidences: hyTypes [
 HyMergeStrategy >> findAgreeingSourcesFor: selectedType in: typesCollection [ 
 
 	^ (typesCollection select: [ :hyType | hyType name = selectedType ]) collect: [ :hyType | hyType source ]
-]
-
-{ #category : 'as yet unclassified' }
-HyMergeStrategy >> getToolConfidenceMap [
-   "map tool className confidence"
-    
-    | mapping |
-    mapping := Dictionary new.
-    
-    InferenceSettings user inferenceTools do: [ :pair |
-        | toolName confidenceString confidenceFloat |
-
-        toolName := (InferenceSettings toolNameToClass at: (pair first)) name.
-        confidenceString := pair second.
-        confidenceFloat := confidenceString asNumber.
-        mapping at: toolName put: confidenceFloat.
-    ].
-    
-    toolConfidenceMap := mapping
 ]
 
 { #category : 'initialization' }
@@ -84,12 +57,6 @@ HyMergeStrategy >> mergeTypes: typesCollection [
 HyMergeStrategy >> strategyName [
 
     self subclassResponsibility
-]
-
-{ #category : 'accessing' }
-HyMergeStrategy >> toolConfidenceMap [
-
-	^ toolConfidenceMap
 ]
 
 { #category : 'initialization' }

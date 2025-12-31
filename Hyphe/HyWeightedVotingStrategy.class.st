@@ -35,20 +35,11 @@ HyWeightedVotingStrategy >> mergeTypes: typesCollection [
 
 	"Collect votes"
 	typesCollection do: [ :hyType |
-			| weight typeStr source |
+			| weight typeStr |
 			typeStr := hyType name.
 
-			source := InferenceSettings inferenceTools select: [ :a |
-				          a first = hyType source ].
-			source
-				ifEmpty: [
-						InferenceSettings toolNameToClass keysAndValuesDo: [ :tool :aClass |
-								hyType source = aClass name ifTrue: [
-										weight := (InferenceSettings inferenceTools select: [ :a |
-											           a first = tool ]) first last asNumber ] ] ]
-				ifNotEmpty: [ weight := source first last asNumber ].
-
-
+			weight := (HyConfidenceManager getToolByName: ( hyType source )) confidence asNumber.
+			
 			votes at: typeStr put: (votes at: typeStr ifAbsent: [ 0 ]) + weight.
 			totalWeight := totalWeight + weight ].
 

@@ -7,7 +7,6 @@ Class {
 	#instVars : [
 		'packages',
 		'tools',
-		'confidenceMap',
 		'results',
 		'merger'
 	],
@@ -17,41 +16,15 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-InferenceExecutor class >> buildConfidenceMap [
-    | map settings |
-    map := Dictionary new.
-    settings := InferenceSettings inferenceTools.
-    
-    settings do: [:pair |
-        map at: pair first put: pair second asNumber
-    ].
-    
-    ^ map
-]
-
-{ #category : 'as yet unclassified' }
 InferenceExecutor class >> executeWithPackages: packageNames tools: selectedTools mergeStrategy: aStrategy [
 	
 	^ self new
 		packages:	packageNames;
 		tools: selectedTools;
-		confidenceMap: self buildConfidenceMap;
 	   merger: (HyTypeMerger newWithStrategy: aStrategy tools: selectedTools );
 	   results: Dictionary new;
 		execute.
     
-]
-
-{ #category : 'accessing' }
-InferenceExecutor >> confidenceMap [
-
-	^ confidenceMap
-]
-
-{ #category : 'accessing' }
-InferenceExecutor >> confidenceMap: anObject [
-
-	confidenceMap := anObject
 ]
 
 { #category : 'as yet unclassified' }

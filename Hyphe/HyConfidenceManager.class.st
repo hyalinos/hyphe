@@ -22,6 +22,15 @@ HyConfidenceManager class >> defaultLevels [
 ]
 
 { #category : 'as yet unclassified' }
+HyConfidenceManager class >> getClassByName: aName [
+
+	|classObj|
+	classObj := HyInferenceToolsManager defaultInferenceTools select: [ :t | t name =  aName].
+	classObj ifNotEmpty: [ ^ classObj first clazz ]
+	ifEmpty: [ ^ (HyInferenceToolsManager defaultInferenceTools select: [ :t | t clazz name = aName]) first clazz ].    
+]
+
+{ #category : 'as yet unclassified' }
 HyConfidenceManager class >> getLevelByScore: aScore [
 
 	| level aNumber |
@@ -31,6 +40,15 @@ HyConfidenceManager class >> getLevelByScore: aScore [
 		         l min <= aNumber and: l max >= aNumber ].
 	level isNotEmpty ifTrue: [ ^ level first name ].
 	^ 'undefined'
+]
+
+{ #category : 'as yet unclassified' }
+HyConfidenceManager class >> getToolByName: aName [
+
+	|classObj|
+	classObj := HyInferenceToolsManager defaultInferenceTools select: [ :t | t name =  aName].
+	classObj ifNotEmpty: [ ^ classObj first ]
+	ifEmpty: [ ^ (HyInferenceToolsManager defaultInferenceTools select: [ :t | t clazz name = aName]) first].    
 ]
 
 { #category : 'accessing' }
