@@ -58,7 +58,7 @@ BaselineOfHyphe >> downloadAvailableTypes [
 BaselineOfHyphe >> initialize [ 
 
 	super initialize.
-	downloadedLibraryNames := OrderedCollection new..
+	downloadedLibraryNames := OrderedCollection new.
 	systemName := 'Pharo' , (SystemVersion current major) asString, '.json'.
 ]
 

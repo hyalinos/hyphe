@@ -11,19 +11,21 @@ Class {
 
 { #category : 'initialization' }
 HyInferenceSettingsManager class >> initialize [ 
-
+	
 	self initializeDefaultValues.
-	self initializeUserSettings
 ]
 
 { #category : 'initialization' }
 HyInferenceSettingsManager class >> initializeDefaultValues [
 
-	self subclassResponsibility 
+	self subclasses do: [ :subclass | 
+		subclass initializeDefaultValues.
+		subclass initializeUser 
+	]
 ]
 
 { #category : 'initialization' }
-HyInferenceSettingsManager class >> initializeUserSettings [
+HyInferenceSettingsManager class >> initializeUser [
 
 	user := self new
 ]
