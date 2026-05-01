@@ -1,6 +1,6 @@
 Class {
 	#name : 'TypeMeConfidentResultsExporter',
-	#superclass : 'TypeMeResultsExporter',
+	#superclass : 'HyResultsExporter',
 	#category : 'Hyphe-Export',
 	#package : 'Hyphe',
 	#tag : 'Export'

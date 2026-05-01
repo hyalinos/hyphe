@@ -1,5 +1,5 @@
 Class {
-	#name : 'TypeMeResultsExporter',
+	#name : 'HyResultsExporter',
 	#superclass : 'InferenceResultsExporter',
 	#category : 'Hyphe-Export',
 	#package : 'Hyphe',
@@ -7,7 +7,7 @@ Class {
 }
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> doExport [
+HyResultsExporter >> doExport [
 
 	(self groupTypeResults: source) keysAndValuesDo: [
 		:packageName
@@ -16,7 +16,7 @@ TypeMeResultsExporter >> doExport [
 ]
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> groupTypeResults: typeResults [
+HyResultsExporter >> groupTypeResults: typeResults [
     "Group type results by package -> class -> method -> types"
     | grouped |
     grouped := Dictionary new.
@@ -44,30 +44,26 @@ TypeMeResultsExporter >> groupTypeResults: typeResults [
 ]
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> processClass: className inPackage: package methods: methodsDict [
+HyResultsExporter >> processClass: className inPackage: package methods: methodsDict [
 	"Process a class and its methods"
 
 	| class |
 	class := self findOrCreateClass: className inPackage: package.
-	methodsDict keysAndValuesDo: [ :methodName :typeSet |
-		self processMethod: methodName withTypes: typeSet inClass: class ]
+	methodsDict keysAndValuesDo: [ :methodName :typeSet | self processMethod: methodName withTypes: typeSet inClass: class ]
 ]
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> processMethod: methodName withTypes: typeSet inClass: aClass [
+HyResultsExporter >> processMethod: methodName withTypes: typeSet inClass: aClass [
 	"Process a method and add return types"
 
 	| method |
 	method := aClass findOrCreateMethod: methodName.
-	self addReturnTypes: typeSet toMethod: method
-	
-	"Determine which side (class_side or inst_side)
+	self addReturnTypes: typeSet toMethod: method "Determine which side (class_side or inst_side)
 	side := self determineSide: methodName forClass: class.""Find or create method"
-	
 ]
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> processPackage: packageName classes: classesDict [
+HyResultsExporter >> processPackage: packageName classes: classesDict [
 	"Process a package and its classes"
 
 	| package |
@@ -77,7 +73,7 @@ TypeMeResultsExporter >> processPackage: packageName classes: classesDict [
 ]
 
 { #category : 'initialization' }
-TypeMeResultsExporter >> processTypeResults: typeResults [
+HyResultsExporter >> processTypeResults: typeResults [
 	"Process all type results and update HyDataRepresentation"
 
 	| grouped |

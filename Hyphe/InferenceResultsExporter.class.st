@@ -42,7 +42,8 @@ InferenceResultsExporter >> addReturnTypes: typeSet toMethod: method [
 	 ifFalse: [
 		| newType |
 		newType := HyType new
-		name: (typeSet anyOne) asSymbol;
+		"name: (typeSet anyOne) asSymbol;"
+		name: (',' join: (typeSet flattened)); 
  		source: defaultSource asSymbol;
  	   yourself.
       method addReturnType: newType 
