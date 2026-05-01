@@ -53,9 +53,16 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 				                          confidence: '0.6';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
 				                          yourself);
-										add: (HyInferenceTool new
+		                         add: (HyInferenceTool new
 				                          name: 'J2Inferer';
 				                          clazz: J2Inferer;
+				                          defaultConfidence: '0.6';
+				                          confidence: '0.6';
+				                          level: (HyConfidenceManager getLevelByScore: '0.6');
+				                          yourself);
+										add: (HyInferenceTool new
+				                          name: 'RoelTyper';
+				                          clazz: TypeCollector;
 				                          defaultConfidence: '0.6';
 				                          confidence: '0.6';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
