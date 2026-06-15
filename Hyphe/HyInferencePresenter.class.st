@@ -324,7 +324,6 @@ HyInferencePresenter >> runInference [
 	Mycelium addResults: results.
 
 	HyBrowseResults openWithData: results.
-	self delete
 ]
 
 { #category : 'initialization' }
