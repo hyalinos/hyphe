@@ -32,13 +32,13 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 				                          confidence: '1.0';
 				                          level: (HyConfidenceManager getLevelByScore: '1.0');
 				                          yourself);
-		                         add: (HyInferenceTool new
+		                         "add: (HyInferenceTool new
 				                          name: 'Type Info Tools';
 				                          clazz: TITMethodReturnTypesGatherer;
 				                          defaultConfidence: '0.8';
 				                          confidence: '0.8';
 				                          level: (HyConfidenceManager getLevelByScore: '0.8');
-				                          yourself);
+				                          yourself);"
 		                         add: (HyInferenceTool new
 				                          name: 'Name-based Heuristics';
 				                          clazz: TypeMeNameBased;
@@ -50,21 +50,21 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 				                          name: 'Offline Test Profiling';
 				                          clazz: HypheReturnsCollectorMethodNodes;
 				                          defaultConfidence: '0.6';
-				                          confidence: '0.6';
+				                          confidence: '0.7';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
 				                          yourself);
 		                         add: (HyInferenceTool new
 				                          name: 'J2Inferer';
 				                          clazz: J2Inferer;
 				                          defaultConfidence: '0.6';
-				                          confidence: '0.6';
+				                          confidence: '0.7';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
 				                          yourself);
-										add: (HyInferenceTool new
+		                         add: (HyInferenceTool new
 				                          name: 'RoelTyper';
 				                          clazz: TypeCollector;
 				                          defaultConfidence: '0.6';
-				                          confidence: '0.6';
+				                          confidence: '0.7';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
 				                          yourself);
 		                         yourself
