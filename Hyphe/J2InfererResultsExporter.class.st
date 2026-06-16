@@ -16,22 +16,28 @@ J2InfererResultsExporter >> initialize [
 { #category : 'initialization' }
 J2InfererResultsExporter >> preExport [
 
-	| processedSource |
+	| processedSource file |
+	
+	file := 'debug.txt' asFileReference.
+	
 	processedSource := OrderedCollection new.
 	source do: [ :j2Class |
 			| packageName className |
 			packageName := j2Class package name.
 			className := j2Class name.
-			j2Class methods keysAndValuesDo: [ :key :value |
-					| methodName types |
-					methodName := key.
+	
+			j2Class methods do: [ :value |
+					| types |
+					
 					types := (self visitReturnValues: value) flattened.
 					types ifNotEmpty: [
 							processedSource add: {
 									packageName.
 									className.
-									methodName.
-									types } ] ] ].
+									(value selector).
+									types } ]
+			]. 
+	].
 						
 	self source: processedSource.
 ]
@@ -42,6 +48,31 @@ J2InfererResultsExporter >> visirJ2ParameterRelationship: aJ2ParameterRelationsh
 
 	^ OrderedCollection new
 		  
+]
+
+{ #category : 'visiting' }
+J2InfererResultsExporter >> visitJ2Array: aJ2Array [ 
+	
+	^ OrderedCollection new.
+]
+
+{ #category : 'visiting' }
+J2InfererResultsExporter >> visitJ2ArrayLiteral: aJ2ArrayLiteral [ 
+
+	^ OrderedCollection new
+]
+
+{ #category : 'visiting' }
+J2InfererResultsExporter >> visitJ2Block: aJ2Block [ 
+
+	^ OrderedCollection new
+]
+
+{ #category : 'visiting' }
+J2InfererResultsExporter >> visitJ2BlockParameter: aJ2BlockParameter [ 
+"do nothing for the moment, return empty"
+
+	^ OrderedCollection new
 ]
 
 { #category : 'visiting' }
@@ -66,9 +97,9 @@ J2InfererResultsExporter >> visitJ2Self: anObject [
 ]
 
 { #category : 'visiting' }
-J2InfererResultsExporter >> visitJ2Variable: anObject [
+J2InfererResultsExporter >> visitJ2Variable: aVariable [
 
-	^ anObject subtypes collect: [ :subtype | subtype accept: self ]
+	^ (aVariable subtypes reject: [:e | aVariable supertypes includes: e]) collect: [ :subtype | subtype accept: self ]
 ]
 
 { #category : 'initialization' }
