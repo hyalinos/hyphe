@@ -1,7 +1,7 @@
-Extension { #name : 'NECLocalEntry' }
+Extension { #name : 'CoLocalEntry' }
 
 { #category : '*Hyphe' }
-NECLocalEntry class >> new [
+CoLocalEntry class >> new [
     | object |
     (self == NECLocalEntry)
         ifTrue: [

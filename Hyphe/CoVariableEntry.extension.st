@@ -1,11 +1,11 @@
-Extension { #name : 'NECInstVarEntry' }
+Extension { #name : 'CoVariableEntry' }
 
 { #category : '*Hyphe' }
-NECInstVarEntry class >> new [
+CoVariableEntry class >> new [
     | object |
-    (self == NECInstVarEntry)
+    (self == NECVariableEntry)
         ifTrue: [
-            object := HypheNECInstVarEntry basicNew.
+            object := HypheNECVariableEntry basicNew.
             object initialize.
             ^ object ].
     object := self basicNew.

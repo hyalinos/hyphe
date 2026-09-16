@@ -1,6 +1,6 @@
 Class {
 	#name : 'HypheNECSelectorEntry',
-	#superclass : 'NECSelectorEntry',
+	#superclass : 'CoSelectorEntry',
 	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
 	#tag : 'Injection'

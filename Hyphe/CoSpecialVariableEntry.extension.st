@@ -1,7 +1,7 @@
-Extension { #name : 'NECSpecialVariableEntry' }
+Extension { #name : 'CoSpecialVariableEntry' }
 
 { #category : '*Hyphe' }
-NECSpecialVariableEntry class >> new [
+CoSpecialVariableEntry class >> new [
     | object |
     (self == NECSpecialVariableEntry)
         ifTrue: [

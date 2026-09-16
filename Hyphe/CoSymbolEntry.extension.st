@@ -1,7 +1,7 @@
-Extension { #name : 'NECSymbolEntry' }
+Extension { #name : 'CoSymbolEntry' }
 
 { #category : '*Hyphe' }
-NECSymbolEntry class >> new [
+CoSymbolEntry class >> new [
 |object|
 (self == NECSymbolEntry )
 	ifTrue: [ 
