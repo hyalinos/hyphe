@@ -27,21 +27,14 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 	defaultInferenceTools := OrderedCollection new
 		                         add: (HyInferenceTool new
 				                          name: 'AST-based inference';
-				                          clazz: TypeMeConfident;
+				                          clazz: ARTIReturnTypeInferrer;
 				                          defaultConfidence: '1.0';
 				                          confidence: '1.0';
 				                          level: (HyConfidenceManager getLevelByScore: '1.0');
 				                          yourself);
-		                         "add: (HyInferenceTool new
-				                          name: 'Type Info Tools';
-				                          clazz: TITMethodReturnTypesGatherer;
-				                          defaultConfidence: '0.8';
-				                          confidence: '0.8';
-				                          level: (HyConfidenceManager getLevelByScore: '0.8');
-				                          yourself);"
 		                         add: (HyInferenceTool new
 				                          name: 'Name-based Heuristics';
-				                          clazz: TypeMeNameBased;
+				                          clazz: ARTHClassifier;
 				                          defaultConfidence: '0.5';
 				                          confidence: '0.5';
 				                          level: (HyConfidenceManager getLevelByScore: '0.5');
@@ -54,8 +47,8 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
 				                          yourself);
 		                         add: (HyInferenceTool new
-				                          name: 'J2Inferer';
-				                          clazz: J2Inferer;
+				                          name: 'Constraint-based inference (CTI)';
+				                          clazz: CTIInferer;
 				                          defaultConfidence: '0.6';
 				                          confidence: '0.7';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');

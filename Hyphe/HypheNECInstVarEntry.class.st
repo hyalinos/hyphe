@@ -1,6 +1,6 @@
 Class {
 	#name : 'HypheNECInstVarEntry',
-	#superclass : 'NECInstVarEntry',
+	#superclass : 'CoInstVarEntry',
 	#category : 'Hyphe-Injection',
 	#package : 'Hyphe',
 	#tag : 'Injection'
