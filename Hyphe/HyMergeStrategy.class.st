@@ -18,8 +18,8 @@ HyMergeStrategy class >> prettyName [
 
 { #category : 'as yet unclassified' }
 HyMergeStrategy >> checkForConfidentType: typesCollection [
- 
-	^ typesCollection select: [:t | t source = #TypeMeConfident  ]
+
+	^ typesCollection select: [ :t | t source = #ARTIReturnTypeInferrer ]
 ]
 
 { #category : 'as yet unclassified' }

@@ -17,23 +17,24 @@ HyBiasedConsensusStrategy class >> prettyName [
 
 { #category : 'initialization' }
 HyBiasedConsensusStrategy >> mergeTypes: typesCollection [
-    "Require consensus among sources but if confident type is present resturn it"
+	"Require consensus among sources but if confident type is present resturn it"
 
 	| confidentTypes |
-	
 	confidentTypes := self checkForConfidentType: typesCollection.
 	confidentTypes ifNotEmpty: [
-		|hyType|
-		hyType := confidentTypes first.
-		^ Dictionary new
-        at: #types put: (OrderedCollection new add: (hyType name); yourself);
-        at: #confidence put: (self extractToolConfidence: (hyType));
-        at: #sources put: (OrderedCollection new add: #TypeMeConfident; yourself);
-        yourself	
-		 ].
+			| hyType |
+			hyType := confidentTypes first.
+			^ Dictionary new
+				  at: #types put: (OrderedCollection new
+						   add: hyType name;
+						   yourself);
+				  at: #confidence put: (self extractToolConfidence: hyType);
+				  at: #sources put: (OrderedCollection new
+					   add: #ARTIReturnTypeInferrer;
+					   yourself);
+				  yourself ].
 
-	^ super mergeTypes: typesCollection.
-
+	^ super mergeTypes: typesCollection
 ]
 
 { #category : 'initialization' }
