@@ -21,7 +21,7 @@ BaselineOfHyphe class >> baseline: spec [
 						spec loads: 'returntypes' ];
 				baseline: 'HypheTools' with: [
 						spec repository: 'github://hyalinos/hyphe-tools:main/src'.
-						spec loads: #( 'inference' 'profiler' ) ].
+						spec loads: 'inference' ].
 			spec
 				package: #Hyphe with: [
 						spec requires: #( 'TypeMe' 'HypheTools' ).
