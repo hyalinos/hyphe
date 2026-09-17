@@ -10,6 +10,31 @@ Class {
 }
 
 { #category : 'baselines' }
+BaselineOfHyphe class >> baseline: spec [
+
+	<baseline>
+	spec for: #common do: [
+			spec
+				baseline: 'TypeMe' with: [ spec repository: 'github://lsafina/typeMe:main' ];
+				baseline: 'TypeInfoTools' with: [
+						spec repository: 'github://lsafina/TypeInfoTools:main'.
+						spec loads: 'returntypes' ];
+				baseline: 'HypheTools' with: [
+						spec repository: 'github://hyalinos/hyphe-tools:main/src'.
+						spec loads: #( 'inference' 'profiler' ) ].
+			spec
+				package: #Hyphe with: [
+						spec requires: #( 'TypeMe' 'HypheTools' ).
+						spec includes: #( 'TypeInfoTools' ) ];
+				package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ];
+				package: #Mycelium with: [ spec repository: 'github://hyalinos/mycelium:main' ].
+			spec
+				group: 'Core' with: #( 'Hyphe' 'Hyphe-Tests' );
+				group: 'default' with: #( 'Hyphe' 'Hyphe-Tests' ).
+			spec postLoadDoIt: #postload ]
+]
+
+{ #category : 'baselines' }
 BaselineOfHyphe >> baseline: spec [
 
 	<baseline>

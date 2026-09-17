@@ -41,7 +41,7 @@ HyInferenceToolsManager class >> initializeDefaultValues [
 				                          yourself);
 		                         add: (HyInferenceTool new
 				                          name: 'Offline Test Profiling';
-				                          clazz: HypheReturnsCollectorMethodNodes;
+				                          clazz: HyMpReturnsCollector;
 				                          defaultConfidence: '0.6';
 				                          confidence: '0.7';
 				                          level: (HyConfidenceManager getLevelByScore: '0.6');
