@@ -19,11 +19,14 @@ BaselineOfHyphe >> baseline: spec [
 				with: [ spec repository: 'github://lsafina/typeMe:main' ];
 				baseline: 'TypeInfoTools' with: [
 						spec repository: 'github://lsafina/TypeInfoTools:main'.
-						spec loads: 'returntypes' ].
+						spec loads: 'returntypes' ];
+				baseline: 'HypheTools' with: [
+						spec repository: 'github://hyalinos/hyphe-tools:main/src'.
+						spec loads: 'inference' ].
 
 			spec
 				package: #Hyphe with: [
-						spec requires: #( 'TypeMe' ).
+						spec requires: #( 'TypeMe' 'HypheTools' ).
 						spec includes: #( 'TypeInfoTools' ) ];
 				package: #'Hyphe-Tests' with: [ spec requires: #( 'Hyphe' ) ];
 				package: #Mycelium
