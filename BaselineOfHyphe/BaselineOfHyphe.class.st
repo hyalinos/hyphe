@@ -20,7 +20,7 @@ BaselineOfHyphe class >> baseline: spec [
 						spec repository: 'github://lsafina/TypeInfoTools:main'.
 						spec loads: 'returntypes' ];
 				baseline: 'HypheTools' with: [
-						spec repository: 'github://hyalinos/hyphe-tools:main/src'.
+						spec repository: 'github://hyalinos/hyphe-tools/src'.
 						spec loads: 'inference' ].
 			spec
 				package: #Hyphe with: [
@@ -46,7 +46,7 @@ BaselineOfHyphe >> baseline: spec [
 						spec repository: 'github://lsafina/TypeInfoTools:main'.
 						spec loads: 'returntypes' ];
 				baseline: 'HypheTools' with: [
-						spec repository: 'github://hyalinos/hyphe-tools:main/src'.
+						spec repository: 'github://hyalinos/hyphe-tools/src'.
 						spec loads: 'inference' ].
 
 			spec
