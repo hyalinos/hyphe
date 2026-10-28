@@ -196,10 +196,12 @@ HyTypeMerger >> mergeMethodTypes: aHyMethod [
 HyTypeMerger >> mergeMethodTypes: aMethod class: aClass package: aPackage [
 
 	| result dict |
-	result := aMethod returnTypes ifNotEmpty: [
-		          self
-			          mergeForObject: aMethod
-			          withTypes: aMethod returnTypes ].
+	"A method without any collected return type has nothing to merge or to report"
+	aMethod returnTypes ifEmpty: [ ^ self ].
+
+	result := self
+		          mergeForObject: aMethod
+		          withTypes: aMethod returnTypes.
 
 	dict := Dictionary new
 			 at: #packageName put: aPackage name;
